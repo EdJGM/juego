@@ -1,0 +1,25 @@
+[remap]
+
+importer="wavefront_obj"
+importer_version=1
+type="Mesh"
+uid="uid://5mi3k1fslf2x"
+path="res://.godot/imported/jar_D_medium.obj-14e886b8500b95270dd6bd70bb0c3310.mesh"
+
+[deps]
+
+files=["res://.godot/imported/jar_D_medium.obj-14e886b8500b95270dd6bd70bb0c3310.mesh"]
+
+source_file="res://KayKit-Restaurant-Bits-1.0-153c8a7535b48237854cb54ff6890679f8c574d1/addons/kaykit_restaurant_bits/Assets/obj/jar_D_medium.obj"
+dest_files=["res://.godot/imported/jar_D_medium.obj-14e886b8500b95270dd6bd70bb0c3310.mesh", "res://.godot/imported/jar_D_medium.obj-14e886b8500b95270dd6bd70bb0c3310.mesh"]
+
+[params]
+
+generate_tangents=true
+generate_lods=true
+generate_shadow_mesh=true
+generate_lightmap_uv2=false
+generate_lightmap_uv2_texel_size=0.2
+scale_mesh=Vector3(1, 1, 1)
+offset_mesh=Vector3(0, 0, 0)
+force_disable_mesh_compression=false

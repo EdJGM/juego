@@ -1,0 +1,25 @@
+[remap]
+
+importer="wavefront_obj"
+importer_version=1
+type="Mesh"
+uid="uid://b6tpul1g47ire"
+path="res://.godot/imported/road_straight.obj-b60d0ec88a3b92c4947712d4b3aca73b.mesh"
+
+[deps]
+
+files=["res://.godot/imported/road_straight.obj-b60d0ec88a3b92c4947712d4b3aca73b.mesh"]
+
+source_file="res://KayKit-City-Builder-Bits-1.0-63976910ca04d16f0fc531b9c614244be8128713/addons/kaykit_city_builder_bits/Assets/obj/road_straight.obj"
+dest_files=["res://.godot/imported/road_straight.obj-b60d0ec88a3b92c4947712d4b3aca73b.mesh", "res://.godot/imported/road_straight.obj-b60d0ec88a3b92c4947712d4b3aca73b.mesh"]
+
+[params]
+
+generate_tangents=true
+generate_lods=true
+generate_shadow_mesh=true
+generate_lightmap_uv2=false
+generate_lightmap_uv2_texel_size=0.2
+scale_mesh=Vector3(1, 1, 1)
+offset_mesh=Vector3(0, 0, 0)
+force_disable_mesh_compression=false

@@ -1,0 +1,5 @@
+res://addons/srcoder_thirdperson_controller/scenes/test_level.tscn
+res://addons/srcoder_thirdperson_controller/scenes/piso_baldosa.gd
+res://colisiones.gd
+res://addons/generate_colliders.gd
+res://addons/srcoder_thirdperson_controller/scenes/collision_helper.gd
