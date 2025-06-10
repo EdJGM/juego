@@ -35,7 +35,7 @@ import_script/path=""
 _subresources={
 "nodes": {
 "PATH:kitchencabinet_corner_half": {
-"import/skip_import": true
+"generate/physics": true
 }
 }
 }
