@@ -14,7 +14,7 @@ func create_tile_grid():
 		return
 	
 	# Dimensiones estáticas del piso: size(30, 0.9, 12) scale(1)
-	var floor_size = Vector2(30, 12)
+	var floor_size = Vector2(20, 8)
 	
 	# Calcular número de baldosas
 	var tiles_x = int(floor_size.x / tile_spacing.x)
