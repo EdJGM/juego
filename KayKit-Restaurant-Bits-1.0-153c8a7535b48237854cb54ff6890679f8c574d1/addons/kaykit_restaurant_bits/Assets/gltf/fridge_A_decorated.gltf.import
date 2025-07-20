@@ -36,6 +36,12 @@ _subresources={
 "nodes": {
 "PATH:fridge_A_decorated": {
 "generate/physics": true
+},
+"PATH:fridge_A_decorated/fridge_A_decorated_door_bottom": {
+"generate/physics": true
+},
+"PATH:fridge_A_decorated/fridge_A_decorated_door_top": {
+"generate/physics": true
 }
 }
 }

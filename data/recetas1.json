@@ -1,0 +1,122 @@
+{
+    "recetas": {
+        "hamburguesa_basica": {
+            "nombre": "Hamburguesa Básica",
+            "precio": 50,
+            "tiempo_preparacion": 30,
+            "ingredientes": [
+                "food_ingredient_bun_bottom",
+                "food_ingredient_burger_cooked",
+                "food_ingredient_bun_top"
+            ],
+            "ingredientes_opcionales": [
+                "food_ingredient_lettuce_slice",
+                "food_ingredient_tomato_slice",
+                "food_ingredient_cheese_slice"
+            ],
+            "icono": "res://icons/hamburguesa.png"
+        },
+        "hamburguesa_completa": {
+            "nombre": "Hamburguesa Completa",
+            "precio": 80,
+            "tiempo_preparacion": 45,
+            "ingredientes": [
+                "food_ingredient_bun_bottom",
+                "food_ingredient_burger_cooked",
+                "food_ingredient_lettuce_slice",
+                "food_ingredient_tomato_slice",
+                "food_ingredient_cheese_slice",
+                "food_ingredient_bun_top"
+            ],
+            "ingredientes_opcionales": [],
+            "icono": "res://icons/hamburguesa_completa.png"
+        },
+        "hamburguesa_vegetariana": {
+            "nombre": "Hamburguesa Vegetariana",
+            "precio": 60,
+            "tiempo_preparacion": 35,
+            "ingredientes": [
+                "food_ingredient_bun_bottom",
+                "food_ingredient_vegetableburger_cooked",
+                "food_ingredient_lettuce_slice",
+                "food_ingredient_tomato_slice",
+                "food_ingredient_bun_top"
+            ],
+            "ingredientes_opcionales": [
+                "food_ingredient_cheese_slice"
+            ],
+            "icono": "res://icons/hamburguesa_veggie.png"
+        },
+        "estofado": {
+            "nombre": "Estofado",
+            "precio": 70,
+            "tiempo_preparacion": 60,
+            "ingredientes": [
+                "food_ingredient_steak_pieces",
+                "food_ingredient_carrot_chopped",
+                "food_ingredient_potato_mashed",
+                "pot_A_stew"
+            ],
+            "ingredientes_opcionales": [
+                "food_ingredient_onion_chopped"
+            ],
+            "icono": "res://icons/estofado.png"
+        }
+    },
+    "ingredientes_crudos": {
+        "food_ingredient_burger_uncooked": {
+            "resultado_cocido": "food_ingredient_burger_cooked",
+            "tiempo_coccion": 15,
+            "estacion": "stove"
+        },
+        "food_ingredient_vegetableburger_uncooked": {
+            "resultado_cocido": "food_ingredient_vegetableburger_cooked",
+            "tiempo_coccion": 12,
+            "estacion": "stove"
+        },
+        "food_ingredient_ham": {
+            "resultado_cocido": "food_ingredient_ham_cooked",
+            "tiempo_coccion": 10,
+            "estacion": "stove"
+        }
+    },
+    "ingredientes_para_cortar": {
+        "food_ingredient_tomato": {
+            "resultado_cortado": "food_ingredient_tomato_slice",
+            "tiempo_corte": 5,
+            "estacion": "cutting_board"
+        },
+        "food_ingredient_lettuce": {
+            "resultado_cortado": "food_ingredient_lettuce_slice",
+            "tiempo_corte": 3,
+            "estacion": "cutting_board"
+        },
+        "food_ingredient_cheese": {
+            "resultado_cortado": "food_ingredient_cheese_slice",
+            "tiempo_corte": 4,
+            "estacion": "cutting_board"
+        },
+        "food_ingredient_onion": {
+            "resultado_cortado": "food_ingredient_onion_chopped",
+            "tiempo_corte": 8,
+            "estacion": "cutting_board"
+        },
+        "food_ingredient_carrot": {
+            "resultado_cortado": "food_ingredient_carrot_chopped",
+            "tiempo_corte": 6,
+            "estacion": "cutting_board"
+        }
+    },
+    "configuracion_juego": {
+        "tiempo_dia_minutos": 8,
+        "dinero_inicial": 100,
+        "clientes_por_minuto": {
+            "manana": 0.5,
+            "mediodia": 1.5,
+            "tarde": 1.0,
+            "noche": 0.3
+        },
+        "paciencia_base_segundos": 120,
+        "bonificacion_rapidez": 1.2
+    }
+}

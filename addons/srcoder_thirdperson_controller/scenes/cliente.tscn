@@ -1,12 +1,21 @@
-[gd_scene load_steps=3 format=3 uid="uid://bw5tnmp1igbjw"]
+[gd_scene load_steps=4 format=3 uid="uid://bw5tnmp1igbjw"]
 
-[ext_resource type="Script" uid="uid://cp3p178t2bcpr" path="res://addons/srcoder_thirdperson_controller/assets/cliente.gd" id="1_gb8u4"]
-[ext_resource type="PackedScene" uid="uid://ccf670c6bkob8" path="res://addons/srcoder_thirdperson_controller/assets/character-male-e.glb" id="2_w5igd"]
+[ext_resource type="Script" uid="uid://cp3p178t2bcpr" path="res://scripts/cliente.gd" id="1_gb8u4"]
+[ext_resource type="PackedScene" uid="uid://1ldc01f31mxe" path="res://addons/srcoder_thirdperson_controller/assets/character-female-b.glb" id="3_vrl6d"]
 
-[node name="Cliente" type="Node3D"]
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_w5igd"]
+radius = 0.274773
+height = 0.721095
+
+[node name="Cliente" type="CharacterBody3D"]
+collision_layer = 8
 script = ExtResource("1_gb8u4")
 
-[node name="character-male-e2" parent="." instance=ExtResource("2_w5igd")]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.358072, 0)
+shape = SubResource("CapsuleShape3D_w5igd")
+
+[node name="character-female-b2" parent="." instance=ExtResource("3_vrl6d")]
 
 [node name="CanvasLayer" type="CanvasLayer" parent="."]
 

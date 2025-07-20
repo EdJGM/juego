@@ -2,6 +2,12 @@ extends Control
 
 @onready var optionsMenu = preload("res://Menu_pausa/menu_pausa.tscn")
 
+func _ready():
+	# Aplicar el shader al ColorRect
+	var shader_material = ShaderMaterial.new()
+	shader_material.shader = load("res://Menu_pausa/menu_pausa.gdshader")
+	$ColorRect.material = shader_material
+
 func _process(delta):
 	test_esc()
 
@@ -27,7 +33,3 @@ func _on_configuracion_pressed() -> void:
 
 func _on_salir_pressed() -> void:
 	get_tree().quit()
-
-# Si quieres cambiar de escena, hazlo dentro de una función, por ejemplo:
-# func cambiar_a_menu_pausa():
-#     get_tree().change_scene_to_file("res://Menu_pausa/menu_pausa.tscn")

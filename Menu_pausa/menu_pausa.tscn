@@ -1,11 +1,24 @@
-[gd_scene load_steps=7 format=3 uid="uid://b2hfyj5p6uj8f"]
+[gd_scene load_steps=11 format=3 uid="uid://b2hfyj5p6uj8f"]
 
-[ext_resource type="Script" uid="uid://cb4womktomgl" path="res://Menu_pausa/menu_pausa.gd" id="1_3ml7n"]
-[ext_resource type="Shader" uid="uid://d0rcd0138rv2h" path="res://Menu_pausa/menu_pausa.gdshader" id="1_jd2x8"]
+[ext_resource type="Script" uid="uid://cb4womktomgl" path="res://scripts/menu_pausa.gd" id="1_3ml7n"]
+[ext_resource type="FontFile" uid="uid://drjw2cvbeghlx" path="res://Main_menu/Roboto-Black.ttf" id="2_mknx8"]
+[ext_resource type="StyleBox" uid="uid://b0hekdsvdmguu" path="res://Menu_pausa/menu_pausa_hover.tres" id="3_bo68g"]
+[ext_resource type="StyleBox" uid="uid://denrhgqs6mbyt" path="res://Menu_pausa/menu_pausa_pausatheme.tres" id="3_gq42n"]
+[ext_resource type="StyleBox" uid="uid://cags57c311cfe" path="res://Menu_pausa/menu_pausa_theme_normal.tres" id="4_gq42n"]
+[ext_resource type="StyleBox" uid="uid://d0ecoohl5byos" path="res://Menu_pausa/menu_pausa_pressed.tres" id="5_gq42n"]
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_jd2x8"]
-shader = ExtResource("1_jd2x8")
-shader_parameter/lod = 0.0
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_xo2k7"]
+bg_color = Color(1, 0.913725, 0.682353, 1)
+border_width_left = 20
+border_width_top = 20
+border_width_right = 20
+border_width_bottom = 20
+border_color = Color(1, 0.823529, 0.388235, 1)
+border_blend = true
+corner_radius_top_left = 30
+corner_radius_top_right = 30
+corner_radius_bottom_right = 30
+corner_radius_bottom_left = 30
 
 [sub_resource type="Animation" id="Animation_p3puo"]
 length = 0.001
@@ -28,6 +41,18 @@ tracks/1/path = NodePath("PanelContainer:modulate")
 tracks/1/interp = 1
 tracks/1/loop_wrap = true
 tracks/1/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Color(1, 1, 1, 0)]
+}
+tracks/2/type = "value"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath("Title:modulate")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/keys = {
 "times": PackedFloat32Array(0),
 "transitions": PackedFloat32Array(1),
 "update": 0,
@@ -61,6 +86,18 @@ tracks/1/keys = {
 "update": 0,
 "values": [Color(1, 1, 1, 0), Color(1, 1, 1, 1)]
 }
+tracks/2/type = "value"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath("Title:modulate")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/keys = {
+"times": PackedFloat32Array(1.19209e-07, 0.3),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [Color(1, 1, 1, 0), Color(1, 1, 1, 1)]
+}
 
 [sub_resource type="AnimationLibrary" id="AnimationLibrary_mknx8"]
 _data = {
@@ -71,29 +108,26 @@ _data = {
 [node name="Menu_Pausa" type="Control"]
 process_mode = 3
 layout_mode = 3
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_left = -1.0
-offset_top = 3.0
-offset_right = -1.0
-offset_bottom = 3.0
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_top = -40.0
+offset_bottom = 40.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_3ml7n")
 
 [node name="ColorRect" type="ColorRect" parent="."]
-material = SubResource("ShaderMaterial_jd2x8")
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 1.0
-offset_top = -3.0
-offset_right = 1.0
-offset_bottom = -3.0
 grow_horizontal = 2
 grow_vertical = 2
+mouse_filter = 2
+color = Color(0, 0, 0, 0.4)
 
 [node name="PanelContainer" type="PanelContainer" parent="."]
 modulate = Color(1, 1, 1, 0)
@@ -103,36 +137,96 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -504.0
-offset_top = -476.0
-offset_right = 513.0
-offset_bottom = 458.0
+offset_left = -295.0
+offset_top = -331.0
+offset_right = -15.0
+offset_bottom = -10.0
 grow_horizontal = 2
 grow_vertical = 2
+scale = Vector2(2, 2)
+theme_override_styles/panel = SubResource("StyleBoxFlat_xo2k7")
 
 [node name="VBoxContainer" type="VBoxContainer" parent="PanelContainer"]
 layout_mode = 2
 size_flags_horizontal = 4
 size_flags_vertical = 4
+theme_override_constants/separation = 10
 
 [node name="Regresar" type="Button" parent="PanelContainer/VBoxContainer"]
+custom_minimum_size = Vector2(200, 0)
 layout_mode = 2
 size_flags_horizontal = 4
 size_flags_vertical = 6
-text = "Regresar"
+theme_override_colors/font_hover_pressed_color = Color(0, 0, 0, 1)
+theme_override_colors/font_color = Color(0.996078, 0.941176, 0.764706, 1)
+theme_override_colors/font_pressed_color = Color(0.996078, 0.941176, 0.764706, 1)
+theme_override_fonts/font = ExtResource("2_mknx8")
+theme_override_font_sizes/font_size = 26
+theme_override_styles/hover = ExtResource("3_bo68g")
+theme_override_styles/pressed = ExtResource("5_gq42n")
+theme_override_styles/normal = ExtResource("4_gq42n")
+text = "Continuar"
 
 [node name="Configuracion" type="Button" parent="PanelContainer/VBoxContainer"]
+custom_minimum_size = Vector2(200, 0)
 layout_mode = 2
 size_flags_horizontal = 4
 size_flags_vertical = 6
+theme_override_colors/font_hover_pressed_color = Color(0, 0, 0, 1)
+theme_override_colors/font_color = Color(0.996078, 0.941176, 0.764706, 1)
+theme_override_colors/font_pressed_color = Color(0.996078, 0.941176, 0.764706, 1)
+theme_override_fonts/font = ExtResource("2_mknx8")
+theme_override_font_sizes/font_size = 26
+theme_override_styles/hover = ExtResource("3_bo68g")
+theme_override_styles/pressed = ExtResource("5_gq42n")
+theme_override_styles/normal = ExtResource("4_gq42n")
 text = "Configuracion"
 
-[node name="Salir" type="Button" parent="PanelContainer/VBoxContainer"]
+[node name="Menu" type="Button" parent="PanelContainer/VBoxContainer"]
+custom_minimum_size = Vector2(200, 0)
 layout_mode = 2
 size_flags_horizontal = 4
 size_flags_vertical = 6
-text = "Salir
-"
+theme_override_colors/font_hover_pressed_color = Color(0, 0, 0, 1)
+theme_override_colors/font_color = Color(0.996078, 0.941176, 0.764706, 1)
+theme_override_colors/font_pressed_color = Color(0.996078, 0.941176, 0.764706, 1)
+theme_override_fonts/font = ExtResource("2_mknx8")
+theme_override_font_sizes/font_size = 26
+theme_override_styles/hover = ExtResource("3_bo68g")
+theme_override_styles/pressed = ExtResource("5_gq42n")
+theme_override_styles/normal = ExtResource("4_gq42n")
+text = "Menu"
+
+[node name="Salir" type="Button" parent="PanelContainer/VBoxContainer"]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 6
+theme_override_colors/font_hover_pressed_color = Color(0, 0, 0, 1)
+theme_override_colors/font_color = Color(0.996078, 0.941176, 0.764706, 1)
+theme_override_colors/font_pressed_color = Color(0.996078, 0.941176, 0.764706, 1)
+theme_override_fonts/font = ExtResource("2_mknx8")
+theme_override_font_sizes/font_size = 26
+theme_override_styles/hover = ExtResource("3_bo68g")
+theme_override_styles/pressed = ExtResource("3_gq42n")
+theme_override_styles/normal = ExtResource("4_gq42n")
+text = "Salir del Juego"
+
+[node name="Title" type="Label" parent="."]
+modulate = Color(1, 1, 1, 0)
+layout_mode = 2
+offset_left = -249.0
+offset_top = -329.0
+offset_right = -9.0
+offset_bottom = -282.0
+scale = Vector2(2, 2)
+size_flags_vertical = 0
+theme_override_colors/font_color = Color(0.996078, 0.941176, 0.760784, 1)
+theme_override_fonts/font = ExtResource("2_mknx8")
+theme_override_font_sizes/font_size = 30
+theme_override_styles/normal = ExtResource("3_gq42n")
+text = "PAUSA"
+horizontal_alignment = 1
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="."]
 libraries = {
@@ -141,4 +235,5 @@ libraries = {
 
 [connection signal="pressed" from="PanelContainer/VBoxContainer/Regresar" to="." method="_on_regresar_pressed"]
 [connection signal="pressed" from="PanelContainer/VBoxContainer/Configuracion" to="." method="_on_configuracion_pressed"]
+[connection signal="pressed" from="PanelContainer/VBoxContainer/Menu" to="." method="_on_regresar_pressed"]
 [connection signal="pressed" from="PanelContainer/VBoxContainer/Salir" to="." method="_on_salir_pressed"]

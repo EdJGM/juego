@@ -1,0 +1,27 @@
+[gd_scene load_steps=5 format=3 uid="uid://dp5cebjsj5510"]
+
+[ext_resource type="Script" uid="uid://bq5l6gngxgcbn" path="res://scripts/MainMenuScene.gd" id="1_01ucf"]
+[ext_resource type="PackedScene" uid="uid://bxy1qa0s46nff" path="res://addons/srcoder_thirdperson_controller/scenes/test_level.tscn" id="1_md4kk"]
+[ext_resource type="PackedScene" uid="uid://c3gqiuw65sc8y" path="res://Main_menu/main_menu.tscn" id="2_rqenl"]
+
+[sub_resource type="Environment" id="Environment_rqenl"]
+
+[node name="MainMenuScene" type="Node3D"]
+script = ExtResource("1_01ucf")
+
+[node name="MenuSkyEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_rqenl")
+
+[node name="Background3D" parent="." instance=ExtResource("1_md4kk")]
+
+[node name="Camera3D" type="Camera3D" parent="."]
+transform = Transform3D(-0.729875, -0.334053, 0.596398, -0.0282764, 0.886469, 0.461923, -0.682995, 0.320282, -0.656458, -2.30532, 6.02906, -0.0274181)
+
+[node name="MusicPlayer" type="AudioStreamPlayer3D" parent="."]
+volume_db = 10.0
+
+[node name="Iluminación" type="DirectionalLight3D" parent="."]
+
+[node name="UILayer" type="CanvasLayer" parent="."]
+
+[node name="MainMenu" parent="UILayer" instance=ExtResource("2_rqenl")]

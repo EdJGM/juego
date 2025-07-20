@@ -1,0 +1,208 @@
+{
+    "recetas": {
+        "hamburguesa_basica": {
+            "nombre": "Hamburguesa Básica",
+            "precio": 50,
+            "tiempo_preparacion": 30,
+            "ingredientes": [
+                "food_ingredient_bun_bottom",
+                "food_ingredient_burger_cooked",
+                "food_ingredient_bun_top"
+            ],
+            "ingredientes_opcionales": [],
+            "dificultad": "facil",
+            "descripcion": "Una hamburguesa simple con pan y carne",
+            "imagen": "hamburguesa_basica.png"
+        },
+        "hamburguesa_completa": {
+            "nombre": "Hamburguesa Completa",
+            "precio": 80,
+            "tiempo_preparacion": 45,
+            "ingredientes": [
+                "food_ingredient_bun_bottom",
+                "food_ingredient_burger_cooked",
+                "food_ingredient_lettuce_slice",
+                "food_ingredient_tomato_slice",
+                "food_ingredient_cheese_slice",
+                "food_ingredient_bun_top"
+            ],
+            "ingredientes_opcionales": [],
+            "dificultad": "medio",
+            "descripcion": "Hamburguesa completa con todos los ingredientes",
+            "imagen": "hamburguesa_completa.png"
+        },
+        "hamburguesa_vegetariana": {
+            "nombre": "Hamburguesa Vegetariana",
+            "precio": 70,
+            "tiempo_preparacion": 40,
+            "ingredientes": [
+                "food_ingredient_bun_bottom",
+                "food_ingredient_vegetableburger_cooked",
+                "food_ingredient_lettuce_slice",
+                "food_ingredient_tomato_slice",
+                "food_ingredient_bun_top"
+            ],
+            "ingredientes_opcionales": [
+                "food_ingredient_cheese_slice"
+            ],
+            "dificultad": "medio",
+            "descripcion": "Hamburguesa vegetariana saludable",
+            "imagen": "hamburguesa_vegetariana.png"
+        },
+        "cheeseburger": {
+            "nombre": "Cheeseburger",
+            "precio": 60,
+            "tiempo_preparacion": 35,
+            "ingredientes": [
+                "food_ingredient_bun_bottom",
+                "food_ingredient_burger_cooked",
+                "food_ingredient_cheese_slice",
+                "food_ingredient_bun_top"
+            ],
+            "ingredientes_opcionales": [
+                "food_ingredient_lettuce_slice",
+                "food_ingredient_tomato_slice"
+            ],
+            "dificultad": "facil",
+            "descripcion": "Hamburguesa clásica con queso",
+            "imagen": "cheeseburger.png"
+        }
+    },
+    "tipos_ingredientes": {
+        "food_ingredient_bun": {
+            "nombre_display": "Pan Hamburguesa",
+            "categoria": "pan_generico",
+            "tiempo_corte": 0,
+            "requiere_coccion": false
+        },
+        "food_ingredient_bun_bottom": {
+            "nombre_display": "Pan de Abajo",
+            "categoria": "pan_inferior",
+            "tiempo_corte": 0,
+            "requiere_coccion": false
+        },
+        "food_ingredient_bun_top": {
+            "nombre_display": "Pan de Arriba",
+            "categoria": "pan_superior",
+            "tiempo_corte": 0,
+            "requiere_coccion": false
+        },
+        "food_ingredient_burger_cooked": {
+            "nombre_display": "Hamburguesa Cocida",
+            "categoria": "carne",
+            "tiempo_corte": 0,
+            "requiere_coccion": false
+        },
+        "food_ingredient_burger_uncooked": {
+            "nombre_display": "Hamburguesa Cruda",
+            "categoria": "carne",
+            "tiempo_corte": 0,
+            "requiere_coccion": true,
+            "tiempo_coccion": 15
+        },
+        "food_ingredient_vegetableburger_cooked": {
+            "nombre_display": "Hamburguesa Vegetal",
+            "categoria": "carne_vegetal",
+            "tiempo_corte": 0,
+            "requiere_coccion": false
+        },
+        "food_ingredient_lettuce": {
+            "nombre_display": "Lechuga Entera",
+            "categoria": "lechuga_entera",
+            "tiempo_corte": 5,
+            "requiere_coccion": false,
+            "resultado_corte": "food_ingredient_lettuce_slice"
+        },
+        "food_ingredient_lettuce_slice": {
+            "nombre_display": "Lechuga Cortada",
+            "categoria": "lechuga_cortada",
+            "tiempo_corte": 0,
+            "requiere_coccion": false
+        },
+        "food_ingredient_tomato": {
+            "nombre_display": "Tomate Entero",
+            "categoria": "tomate_entero",
+            "tiempo_corte": 3,
+            "requiere_coccion": false,
+            "resultado_corte": "food_ingredient_tomato_slice"
+        },
+        "food_ingredient_tomato_slice": {
+            "nombre_display": "Tomate Cortado",
+            "categoria": "tomate_cortado",
+            "tiempo_corte": 0,
+            "requiere_coccion": false
+        },
+        "food_ingredient_cheese": {
+            "nombre_display": "Queso Entero",
+            "categoria": "queso_entero",
+            "tiempo_corte": 2,
+            "requiere_coccion": false,
+            "resultado_corte": "food_ingredient_cheese_slice"
+        },
+        "food_ingredient_cheese_slice": {
+            "nombre_display": "Queso Cortado",
+            "categoria": "queso_cortado",
+            "tiempo_corte": 0,
+            "requiere_coccion": false
+        }
+    },
+    "configuracion_juego": {
+        "tiempo_dia_minutos": 8,
+        "dinero_inicial": 100,
+        "paciencia_base_segundos": 120,
+        "clientes_simultaneos_max": 3,
+        "dificultad_incremento": {
+            "manana": 1.0,
+            "mediodia": 1.5,
+            "tarde": 1.2,
+            "noche": 0.8
+        },
+        "frecuencia_clientes": {
+            "manana": 0.8,
+            "mediodia": 2.0,
+            "tarde": 1.2,
+            "noche": 0.4
+        },
+        "bonificaciones": {
+            "rapidez_75": 1.5,
+            "rapidez_50": 1.2,
+            "rapidez_25": 1.0,
+            "tardio": 0.7
+        }
+    },
+    "niveles": {
+        "nivel_1": {
+            "nombre": "Primer Día",
+            "recetas_disponibles": [
+                "hamburguesa_basica",
+                "cheeseburger"
+            ],
+            "duracion_minutos": 5,
+            "objetivo_dinero": 200,
+            "objetivo_pedidos": 5
+        },
+        "nivel_2": {
+            "nombre": "Rush Matutino",
+            "recetas_disponibles": [
+                "hamburguesa_basica",
+                "cheeseburger",
+                "hamburguesa_vegetariana"
+            ],
+            "duracion_minutos": 6,
+            "objetivo_dinero": 350,
+            "objetivo_pedidos": 8
+        },
+        "nivel_3": {
+            "nombre": "Menú Completo",
+            "recetas_disponibles": [
+                "hamburguesa_basica",
+                "hamburguesa_completa",
+                "hamburguesa_vegetariana",
+                "cheeseburger"
+            ],
+            "duracion_minutos": 8,
+            "objetivo_dinero": 500,
+            "objetivo_pedidos": 12
+        }
+    }
+}

@@ -1,0 +1,129 @@
+[gd_scene load_steps=7 format=3 uid="uid://c3gqiuw65sc8y"]
+
+[ext_resource type="Script" uid="uid://dmqa57v74s36t" path="res://scripts/MainMenu.gd" id="1_dt0ve"]
+[ext_resource type="StyleBox" uid="uid://bx5kvjijh0oty" path="res://Main_menu/main_menu_theme_hover.tres" id="2_dt0ve"]
+[ext_resource type="FontFile" uid="uid://drjw2cvbeghlx" path="res://Main_menu/Roboto-Black.ttf" id="2_sblur"]
+[ext_resource type="StyleBox" uid="uid://cpdm8iw5hn7eh" path="res://Main_menu/main_menu_theme_pressed.tres" id="3_sblur"]
+[ext_resource type="StyleBox" uid="uid://dtqlp08mqgda7" path="res://Main_menu/main_menu_theme_normal.tres" id="4_ac4ys"]
+
+[sub_resource type="Theme" id="Theme_ypuyk"]
+
+[node name="Control" type="Control"]
+layout_direction = 1
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 10.0
+offset_right = 10.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_dt0ve")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -233.0
+offset_top = -275.0
+offset_right = 234.0
+offset_bottom = 275.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 40
+alignment = 1
+
+[node name="Title" type="Label" parent="VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.772549, 0.0784314, 1)
+theme_override_colors/font_outline_color = Color(0.333333, 0.14902, 0, 1)
+theme_override_constants/line_spacing = -20
+theme_override_constants/outline_size = 70
+theme_override_fonts/font = ExtResource("2_sblur")
+theme_override_font_sizes/font_size = 150
+text = "Cafetería 
+Xpress"
+horizontal_alignment = 1
+
+[node name="ButtonContainer" type="VBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+alignment = 1
+
+[node name="IniciarJuego" type="Button" parent="VBoxContainer/ButtonContainer"]
+custom_minimum_size = Vector2(300, 0)
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_colors/font_hover_color = Color(1, 1, 0.8, 1)
+theme_override_colors/font_color = Color(1, 1, 0.537255, 1)
+theme_override_colors/font_pressed_color = Color(0.9, 0.9, 0, 1)
+theme_override_constants/outline_size = 5
+theme_override_fonts/font = ExtResource("2_sblur")
+theme_override_font_sizes/font_size = 40
+theme_override_styles/hover = ExtResource("2_dt0ve")
+theme_override_styles/pressed = ExtResource("3_sblur")
+theme_override_styles/normal = ExtResource("4_ac4ys")
+text = "Iniciar"
+
+[node name="Niveles" type="Button" parent="VBoxContainer/ButtonContainer"]
+custom_minimum_size = Vector2(300, 0)
+layout_mode = 2
+size_flags_horizontal = 4
+theme = SubResource("Theme_ypuyk")
+theme_override_colors/font_hover_color = Color(1, 1, 0.8, 1)
+theme_override_colors/font_color = Color(1, 1, 0.537255, 1)
+theme_override_colors/font_pressed_color = Color(0.9, 0.9, 0, 1)
+theme_override_constants/outline_size = 5
+theme_override_fonts/font = ExtResource("2_sblur")
+theme_override_font_sizes/font_size = 40
+theme_override_styles/hover = ExtResource("2_dt0ve")
+theme_override_styles/pressed = ExtResource("3_sblur")
+theme_override_styles/normal = ExtResource("4_ac4ys")
+text = "Niveles"
+
+[node name="Configuracion" type="Button" parent="VBoxContainer/ButtonContainer"]
+custom_minimum_size = Vector2(300, 0)
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_colors/font_hover_color = Color(1, 1, 0.8, 1)
+theme_override_colors/font_color = Color(1, 1, 0.537255, 1)
+theme_override_colors/font_pressed_color = Color(0.9, 0.9, 0, 1)
+theme_override_constants/outline_size = 5
+theme_override_fonts/font = ExtResource("2_sblur")
+theme_override_font_sizes/font_size = 40
+theme_override_styles/hover = ExtResource("2_dt0ve")
+theme_override_styles/pressed = ExtResource("3_sblur")
+theme_override_styles/normal = ExtResource("4_ac4ys")
+text = "Configuración"
+
+[node name="Creditos" type="Button" parent="VBoxContainer/ButtonContainer"]
+custom_minimum_size = Vector2(300, 0)
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_colors/font_hover_color = Color(1, 1, 0.8, 1)
+theme_override_colors/font_color = Color(1, 1, 0.537255, 1)
+theme_override_colors/font_pressed_color = Color(0.9, 0.9, 0, 1)
+theme_override_constants/outline_size = 5
+theme_override_fonts/font = ExtResource("2_sblur")
+theme_override_font_sizes/font_size = 40
+theme_override_styles/hover = ExtResource("2_dt0ve")
+theme_override_styles/pressed = ExtResource("3_sblur")
+theme_override_styles/normal = ExtResource("4_ac4ys")
+text = "Créditos"
+
+[node name="Salir" type="Button" parent="VBoxContainer/ButtonContainer"]
+custom_minimum_size = Vector2(300, 0)
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_colors/font_hover_color = Color(1, 1, 0.8, 1)
+theme_override_colors/font_color = Color(1, 1, 0.537255, 1)
+theme_override_colors/font_pressed_color = Color(0.9, 0.9, 0, 1)
+theme_override_constants/outline_size = 5
+theme_override_fonts/font = ExtResource("2_sblur")
+theme_override_font_sizes/font_size = 40
+theme_override_styles/hover = ExtResource("2_dt0ve")
+theme_override_styles/pressed = ExtResource("3_sblur")
+theme_override_styles/normal = ExtResource("4_ac4ys")
+text = "Salir"

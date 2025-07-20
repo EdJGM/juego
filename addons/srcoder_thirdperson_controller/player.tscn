@@ -1,8 +1,8 @@
 [gd_scene load_steps=6 format=3 uid="uid://dgaexk2mqn6j8"]
 
-[ext_resource type="Script" uid="uid://nd60hn3c0f8q" path="res://addons/srcoder_thirdperson_controller/assets/player.gd" id="1_4s81h"]
+[ext_resource type="Script" uid="uid://nd60hn3c0f8q" path="res://scripts/player.gd" id="1_4s81h"]
 [ext_resource type="PackedScene" uid="uid://ccf670c6bkob8" path="res://addons/srcoder_thirdperson_controller/assets/character-male-e.glb" id="1_jt3wm"]
-[ext_resource type="Script" uid="uid://bt0ve6lyi6bwl" path="res://addons/srcoder_thirdperson_controller/assets/camera_pivot.gd" id="3_0ffrl"]
+[ext_resource type="Script" uid="uid://bt0ve6lyi6bwl" path="res://scripts/camera_pivot.gd" id="3_0ffrl"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_71pwh"]
 radius = 0.274773
