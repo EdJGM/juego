@@ -30,6 +30,7 @@ var game_manager: Node
 func _ready():
 	print("Cliente inicializando...")
 	
+	rotation.y = deg_to_rad(90)
 	# Obtener GameManager
 	game_manager = get_node_or_null("/root/GameManager")
 	if not game_manager:
@@ -125,7 +126,7 @@ func procesar_giro(delta):
 
 func procesar_salida(delta):
 	# Caminar hacia adelante según la rotación actual
-	var direccion = -transform.basis.z  # Hacia adelante en la dirección que mira
+	var direccion = transform.basis.x  # Hacia adelante en la dirección que mira
 	translate(direccion * velocidad_salida * delta)
 	
 	# Asegurar animación de caminar

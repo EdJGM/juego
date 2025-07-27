@@ -196,6 +196,7 @@ func spawn_cliente():
 		return
 	
 	var cliente = cliente_scene.instantiate()
+	var entrance_pos = Vector3(-10, 0.5, 0.294) #Entrada del restaurante
 	if not cliente:
 		print("ERROR: No se pudo instanciar el cliente")
 		return
@@ -205,7 +206,8 @@ func spawn_cliente():
 	# Agregar cliente a la escena principal
 	var main_scene = get_tree().current_scene
 	main_scene.add_child(cliente)
-	cliente.global_position = spawn_point
+	#cliente.global_position = spawn_point
+	cliente.global_position = entrance_pos
 	cliente.add_to_group("clientes")
 	
 	# Generar pedido aleatorio
@@ -230,10 +232,19 @@ func generar_pedido_aleatorio() -> Dictionary:
 		print("ERROR: No hay recetas disponibles")
 		return {}
 	
+	# --- SOLO USAR UNA RECETA ESPECÍFICA PARA PRUEBAS ---
+	var receta_key = "hamburguesa_basica"  # Cambia esto por el nombre de la receta que quieras probar
 	var recetas = recetas_data["recetas"]
-	var recetas_keys = recetas.keys()
-	var receta_key = recetas_keys[randi() % recetas_keys.size()]
+	if not recetas.has(receta_key):
+		print("ERROR: La receta de prueba no existe")
+		return {}
 	var receta = recetas[receta_key]
+	# ---------------------------------------------------
+
+	#var recetas = recetas_data["recetas"]
+	#var recetas_keys = recetas.keys()
+	#var receta_key = recetas_keys[randi() % recetas_keys.size()]
+	#var receta = recetas[receta_key]
 	
 	# Calcular paciencia basada en la fase del día
 	var fase_actual = obtener_fase_del_dia()

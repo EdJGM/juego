@@ -139,6 +139,25 @@ func configurar_nivel():
 	if not player.is_in_group("player"):
 		player.add_to_group("player")
 		print("✓ Jugador agregado al grupo 'player'")
+	
+	# Agregar mesas al grupo "tables"
+	configurar_mesas()
+
+func configurar_mesas():
+	var mesas = [
+		"geometry/CSGBox3D/table_round_A_decorated2",
+		"geometry/CSGBox3D/table_round_A_decorated3",
+		"geometry/CSGBox3D/table_round_A_small_decorated2",
+		"geometry/CSGBox3D/table_roung_A_small_decorated3"
+		# Agrega aquí todas las rutas de tus mesas
+	]
+	for mesa_path in mesas:
+		var mesa = get_node_or_null(mesa_path)
+		if mesa:
+			mesa.add_to_group("tables")
+			print("✓ Mesa agregada al grupo 'tables': ", mesa.name)
+		else:
+			print("⚠️ No se encontró la mesa en la ruta: ", mesa_path)
 
 func encontrar_jugador_en_escena() -> CharacterBody3D:
 	# Buscar por nombre específico primero

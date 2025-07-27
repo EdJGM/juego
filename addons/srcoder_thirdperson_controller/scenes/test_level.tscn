@@ -1,4 +1,4 @@
-[gd_scene load_steps=79 format=3 uid="uid://bxy1qa0s46nff"]
+[gd_scene load_steps=78 format=3 uid="uid://bxy1qa0s46nff"]
 
 [ext_resource type="Material" uid="uid://5ywq8eeal8et" path="res://addons/srcoder_thirdperson_controller/assets/Textures/grid_orange_1.material" id="1_duh8c"]
 [ext_resource type="Script" uid="uid://d2kof42uge6il" path="res://scripts/piso_baldosa.gd" id="2_q37x8"]
@@ -68,7 +68,6 @@
 [ext_resource type="PackedScene" uid="uid://b61ocm8w3qt2m" path="res://KayKit-Restaurant-Bits-1.0-153c8a7535b48237854cb54ff6890679f8c574d1/addons/kaykit_restaurant_bits/Assets/gltf/wall_window_open.gltf" id="60_mwp85"]
 [ext_resource type="PackedScene" uid="uid://ell4pf8rlar2" path="res://KayKit-Restaurant-Bits-1.0-153c8a7535b48237854cb54ff6890679f8c574d1/addons/kaykit_restaurant_bits/Assets/gltf/pillar_B.gltf" id="62_cvtm0"]
 [ext_resource type="PackedScene" uid="uid://b2hfyj5p6uj8f" path="res://Menu_pausa/menu_pausa.tscn" id="64_wbfu7"]
-[ext_resource type="PackedScene" uid="uid://bw5tnmp1igbjw" path="res://addons/srcoder_thirdperson_controller/scenes/cliente.tscn" id="65_5dqce"]
 [ext_resource type="PackedScene" uid="uid://cmpywm14aclqi" path="res://KayKit-Restaurant-Bits-1.0-153c8a7535b48237854cb54ff6890679f8c574d1/addons/kaykit_restaurant_bits/Assets/gltf/food_ingredient_bun.gltf" id="68_s5gd5"]
 [ext_resource type="PackedScene" uid="uid://dvv01sx0xnhn4" path="res://KayKit-Restaurant-Bits-1.0-153c8a7535b48237854cb54ff6890679f8c574d1/addons/kaykit_restaurant_bits/Assets/gltf/food_ingredient_bun_bottom.gltf" id="71_i7dwi"]
 [ext_resource type="PackedScene" uid="uid://bgaxgoelydo53" path="res://KayKit-Restaurant-Bits-1.0-153c8a7535b48237854cb54ff6890679f8c574d1/addons/kaykit_restaurant_bits/Assets/gltf/food_ingredient_bun_top.gltf" id="72_tvd46"]
@@ -529,9 +528,6 @@ transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, -10, 0.3, 4.287)
 
 [node name="pillar_B5" parent="." instance=ExtResource("62_cvtm0")]
 transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, -10, 0.3, -3.73851)
-
-[node name="Cliente" parent="." instance=ExtResource("65_5dqce")]
-transform = Transform3D(-4.37114e-08, 0, 1, 0, 1, 0, -1, 0, -4.37114e-08, -1, 0.5, 0.194873)
 
 [node name="food_ingredient_bun2" parent="." instance=ExtResource("68_s5gd5")]
 transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 3.66868, 0.804541, 0.874458)
