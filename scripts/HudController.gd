@@ -365,6 +365,8 @@ func tomar_orden_cliente():
 		var pedido = obtener_pedido_cliente(cliente_cercano)
 		if not pedido.is_empty():
 			cliente_actual = cliente_cercano
+			if cliente_cercano.has_method("marcar_pedido_realizado"):
+				cliente_cercano.marcar_pedido_realizado()
 			mostrar_pedido_dinamico(pedido)
 			print("✓ Orden tomada del cliente: ", pedido.get("nombre_receta", "Desconocido"))
 		else:
