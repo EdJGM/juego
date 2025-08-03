@@ -1,0 +1,10 @@
+[gd_scene load_steps=3 format=3 uid="uid://dpe3g6q5hjj4p"]
+
+[ext_resource type="PackedScene" uid="uid://6bxv51qh0nda" path="res://KayKit-Restaurant-Bits-1.0-153c8a7535b48237854cb54ff6890679f8c574d1/addons/kaykit_restaurant_bits/Assets/gltf/food_ingredient_burger_cooked.gltf" id="1_8cqbq"]
+[ext_resource type="Script" uid="uid://bv6yn8xk1wsv0" path="res://scripts/objeto_agarrable.gd" id="2_script"]
+
+[node name="food_ingredient_burger_cooked2" type="RigidBody3D"]
+script = ExtResource("2_script")
+
+[node name="food_ingredient_burger_cooked" parent="." instance=ExtResource("1_8cqbq")]
+transform = Transform3D(0.3, 0, 0, 0, 0.3, 0, 0, 0, 0.3, 0, 0, 0)

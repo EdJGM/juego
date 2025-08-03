@@ -12,21 +12,17 @@ func _ready():
 	# Verificar si estamos en el juego real usando el SceneManager
 	var scene_manager = get_node_or_null("/root/SceneManager")
 	if scene_manager and scene_manager.es_menu():
-		print("TestLevel en menú - saltando inicialización completa")
 		return
 	
 	# También verificar por nombre de escena como fallback
 	var scene_name = get_tree().current_scene.name
 	if scene_name.contains("MainMenu") or get_parent().name.contains("Background"):
-		print("TestLevel en menú (fallback) - saltando inicialización completa")
 		return
 	
 	# Evitar inicialización múltiple
 	if inicializado:
-		print("TestLevel ya fue inicializado - saltando")
 		return
 	
-	print("TestLevel inicializando...")
 	inicializado = true
 	
 	# Esperar un frame para que todos los nodos estén listos
@@ -47,83 +43,12 @@ func _ready():
 	# Configurar estaciones de trabajo
 	configurar_estaciones_cocina()
 	
-	print("Nivel inicializado correctamente")
 	
-	# Debugging inicial
-	call_deferred("debug_inicial_completo")
-
-func debug_inicial_completo():
-	"""Hace un debug completo del estado inicial"""
-	print("\n=== DEBUG INICIAL COMPLETO ===")
-	
-	# Debug del player
-	if player:
-		print("PLAYER:")
-		print("  - Nombre: ", player.name)
-		print("  - Posición: ", player.global_position)
-		print("  - Layer: ", player.collision_layer)
-		print("  - Mask: ", player.collision_mask)
-		print("  - Grupo player: ", player.is_in_group("player"))
-	else:
-		print("PLAYER: NO ENCONTRADO")
-	
-	# Debug de objetos agarrables
-	print("\nOBJETOS AGARRABLES:")
-	var objetos_sin_area = []
-	var objetos_mal_posicionados = []
-	
-	for i in range(objetos_agarrables.size()):
-		var obj = objetos_agarrables[i]
-		if obj and is_instance_valid(obj):
-			print("  [", i, "] ", obj.name)
-			print("    - Ingrediente: ", obj.nombre_ingrediente if "nombre_ingrediente" in obj else "N/A")
-			print("    - Posición: ", obj.global_position)
-			print("    - Visible: ", obj.visible)
-			print("    - Layer: ", obj.collision_layer)
-			print("    - Grupo: ", obj.is_in_group("objetos_agarrables"))
-			
-			# Verificar posición
-			if obj.global_position == Vector3.ZERO:
-				objetos_mal_posicionados.append(obj)
-				print("    - ⚠️ POSICIÓN EN ORIGEN!")
-			
-			# Verificar si tiene área de detección
-			if obj.has_node("AreaDeteccion"):
-				var area = obj.get_node("AreaDeteccion")
-				print("    - Área detección: SÍ")
-				print("    - Área layer: ", area.collision_layer)
-				print("    - Área mask: ", area.collision_mask)
-				print("    - Área monitoring: ", area.monitoring)
-			else:
-				print("    - Área detección: NO")
-				objetos_sin_area.append(obj)
-		else:
-			print("  [", i, "] OBJETO INVÁLIDO")
-	
-	# Arreglar objetos sin área
-	if objetos_sin_area.size() > 0:
-		print("\n⚠️ ARREGLANDO ", objetos_sin_area.size(), " OBJETOS SIN ÁREA...")
-		for obj in objetos_sin_area:
-			if obj.has_method("crear_area_deteccion_mejorada"):
-				obj.crear_area_deteccion_mejorada()
-				print("✓ Área creada para: ", obj.name)
-	
-	# Informar sobre posiciones mal ubicadas
-	if objetos_mal_posicionados.size() > 0:
-		print("\n⚠️ ", objetos_mal_posicionados.size(), " OBJETOS MAL POSICIONADOS!")
-		print("Esto indica que se perdió la posición original durante la conversión.")
-		print("Los objetos deberían estar dispersos por la cocina, no todos en (0,0,0)")
-	
-	print("===============================\n")
 
 func configurar_game_manager():
 	# Obtener GameManager del autoload
 	game_manager = get_node_or_null("/root/GameManager")
 	
-	if game_manager:
-		print("✓ GameManager encontrado")
-	else:
-		print("ERROR: GameManager no encontrado en autoload")
 
 func configurar_nivel():
 	# Buscar el jugador de manera más robusta
@@ -201,25 +126,16 @@ func configurar_hud():
 		print("⚠️ HUD no encontrado en el jugador")
 
 func configurar_objetos_agarrables():
-	print("Configurando objetos agarrables...")
 	
 	# Limpiar la lista primero
 	objetos_agarrables.clear()
 	
-	# Buscar todos los ingredientes en la escena
-	var ingredientes = []
-	buscar_ingredientes_recursivo(self, ingredientes)
+	# Buscar objetos que ya son RigidBody3D y están en el grupo
+	var objetos_preparados = get_tree().get_nodes_in_group("objetos_agarrables")
 	
-	print("Ingredientes encontrados: ", ingredientes.size())
-	
-	for ingrediente in ingredientes:
-		# Verificar que no hayamos procesado este ingrediente ya
-		if ingrediente in objetos_agarrables:
-			continue
-			
-		configurar_ingrediente_como_agarrable(ingrediente)
-	
-	print("✓ ", objetos_agarrables.size(), " objetos agarrables configurados")
+	for objeto in objetos_preparados:
+		if objeto is RigidBody3D:
+			objetos_agarrables.append(objeto)
 
 func buscar_ingredientes_recursivo(nodo: Node, lista_ingredientes: Array):
 	# Verificar por nombre del nodo
@@ -227,7 +143,6 @@ func buscar_ingredientes_recursivo(nodo: Node, lista_ingredientes: Array):
 	if "food_ingredient" in nombre_nodo or "crate_" in nombre_nodo:
 		if nodo not in lista_ingredientes:  # Evitar duplicados
 			lista_ingredientes.append(nodo)
-			print("Ingrediente encontrado: ", nodo.name)
 		return
 	
 	# Verificar por ruta del archivo de escena
@@ -236,7 +151,6 @@ func buscar_ingredientes_recursivo(nodo: Node, lista_ingredientes: Array):
 		if "food_ingredient" in scene_path or ("crate" in scene_path and "food" in scene_path):
 			if nodo not in lista_ingredientes:  # Evitar duplicados
 				lista_ingredientes.append(nodo)
-				print("Ingrediente encontrado por ruta: ", nodo.name)
 			return
 	
 	# Buscar en todos los hijos
@@ -246,7 +160,6 @@ func buscar_ingredientes_recursivo(nodo: Node, lista_ingredientes: Array):
 func configurar_ingrediente_como_agarrable(nodo: Node):
 	# Verificar si ya tiene el script de objeto agarrable
 	if nodo.get_script() and nodo.get_script().resource_path.contains("objeto_agarrable"):
-		print("Ingrediente ya configurado: ", nodo.name)
 		objetos_agarrables.append(nodo)
 		return
 	
@@ -554,40 +467,3 @@ func configurar_estacion_corte(mesa: Node):
 		
 		area.collision_layer = 0
 		area.collision_mask = 2  # Layer del jugador
-
-# Funciones para debugging y testing
-func _input(event):
-	# Solo procesar eventos de teclado para evitar errores con mouse motion
-	if not Engine.is_editor_hint() and inicializado and event is InputEventKey and event.pressed:
-		if Input.is_action_just_pressed("ui_text_completion_accept"):  # Tab
-			mostrar_debug_info()
-		elif Input.is_action_just_pressed("ui_text_completion_replace"):  # Shift+Tab
-			if game_manager and game_manager.has_method("forzar_spawn_cliente"):
-				game_manager.forzar_spawn_cliente()
-		elif Input.is_action_just_pressed("ui_cancel"):  # Escape - debug completo
-			debug_inicial_completo()
-
-func mostrar_debug_info():
-	print("\n=== DEBUG INFO TestLevel ===")
-	print("Inicializado: ", inicializado)
-	print("Objetos agarrables: ", objetos_agarrables.size())
-	print("Player encontrado: ", player != null)
-	print("HUD encontrado: ", hud != null)
-	print("GameManager conectado: ", game_manager != null)
-	
-	if game_manager:
-		var stats = game_manager.obtener_estadisticas_dia()
-		print("Clientes activos: ", stats.clientes_activos)
-		print("Pedidos completados: ", stats.pedidos_completados)
-		print("Dinero actual: $", stats.dinero_actual)
-		print("Fase del día: ", stats.fase_actual)
-	
-	if player and player.has_method("debug_player_estado"):
-		player.debug_player_estado()
-	
-	print("============================\n")
-
-# Función para testear manualmente la interacción
-func forzar_test_interaccion():
-	if player and player.has_method("forzar_agarrar_objeto_cercano"):
-		player.forzar_agarrar_objeto_cercano()

@@ -1,0 +1,17 @@
+[gd_scene load_steps=3 format=3 uid="uid://bpgmdogncvgt4"]
+
+[ext_resource type="PackedScene" uid="uid://doyr1ghxjpbap" path="res://kenney_mini-characters/Models/GLB format/character-male-f.glb" id="1_uh8uc"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_a0lry"]
+radius = 0.275
+height = 0.721
+
+[node name="CharacterBody3D" type="CharacterBody3D"]
+collision_layer = 0
+collision_mask = 0
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("CapsuleShape3D_a0lry")
+
+[node name="character-male-f2" parent="." instance=ExtResource("1_uh8uc")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.325628, 0)

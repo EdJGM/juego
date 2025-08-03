@@ -27,7 +27,7 @@ var puntos_spawn_clientes: Array[Vector3] = []
 # Configuración
 var paciencia_base: float = 120.0
 var clientes_por_minuto: Dictionary = {
-	"manana": 0.8,
+	"manana": 0.6,
 	"mediodia": 2.0, 
 	"tarde": 1.2,
 	"noche": 0.4
@@ -445,10 +445,6 @@ func obtener_estadisticas_dia() -> Dictionary:
 		"clientes_activos": clientes_activos.size()
 	}
 
-# Función para debugging
-func forzar_spawn_cliente():
-	spawn_cliente()
-
 func reiniciar_dia():
 	# Limpiar clientes activos
 	for cliente in clientes_activos:
@@ -465,3 +461,6 @@ func reiniciar_dia():
 	get_tree().paused = false
 	dinero_cambiado.emit(dinero)
 	print("Día reiniciado")
+
+func forzar_spawn_cliente():
+	spawn_cliente()

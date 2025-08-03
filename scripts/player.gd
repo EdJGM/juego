@@ -91,10 +91,6 @@ func _input(event):
 	elif Input.is_action_just_pressed("limpiar_inventario"):  # Tecla C
 		if inventario:
 			inventario.limpiar_inventario()
-	
-	# Debug
-	elif Input.is_action_just_pressed("ui_text_completion_accept"):  # Tab
-		debug_player_estado()
 
 func interactuar_con_objeto_cercano():
 	# Buscar objetos cercanos usando múltiples métodos
@@ -117,8 +113,6 @@ func interactuar_con_objeto_cercano():
 			print("Objeto no se puede agarrar - puede_agarrarse: ", objeto.puede_agarrarse, ", siendo_agarrado: ", objeto.siendo_agarrado)
 	else:
 		print("No hay objetos cerca para agarrar")
-		# Debug adicional
-		debug_objetos_en_area()
 
 func buscar_objetos_agarrables_cercanos() -> Array:
 	var objetos_cercanos = []
@@ -142,34 +136,6 @@ func buscar_objetos_agarrables_cercanos() -> Array:
 	
 	return objetos_cercanos
 
-func debug_objetos_en_area():
-	print("\n=== DEBUG OBJETOS EN ÁREA ===")
-	print("Posición del jugador: ", global_position)
-	print("Layer del jugador: ", collision_layer)
-	print("Mask del jugador: ", collision_mask)
-	
-	var objetos = get_tree().get_nodes_in_group("objetos_agarrables")
-	print("Total objetos agarrables: ", objetos.size())
-	
-	for i in range(objetos.size()):
-		var objeto = objetos[i]
-		if objeto and is_instance_valid(objeto):
-			var distancia = global_position.distance_to(objeto.global_position)
-			print("Objeto ", i, ":")
-			print("  - Nombre: ", objeto.name)
-			print("  - Ingrediente: ", objeto.nombre_ingrediente if "nombre_ingrediente" in objeto else "N/A")
-			print("  - Posición: ", objeto.global_position)
-			print("  - Distancia: ", distancia)
-			print("  - Visible: ", objeto.visible if "visible" in objeto else "N/A")
-			print("  - Puede agarrarse: ", objeto.puede_agarrarse if "puede_agarrarse" in objeto else "N/A")
-			print("  - Siendo agarrado: ", objeto.siendo_agarrado if "siendo_agarrado" in objeto else "N/A")
-			
-			# Debug del área de detección
-			if objeto.has_method("debug_objeto"):
-				objeto.debug_objeto()
-	
-	print("=============================\n")
-
 func entregar_pedido():
 	if inventario:
 		inventario.entregar_a_cliente_cercano()
@@ -180,27 +146,3 @@ func obtener_inventario() -> Inventario:
 func rotate_model(direction: Vector3, delta : float) -> void:
 	#rotate the model to match the springarm
 	playermodel.basis = lerp(playermodel.basis, Basis.looking_at(direction), 10.0 * delta)
-
-func debug_player_estado():
-	print("\n=== DEBUG PLAYER ===")
-	print("Posición: ", global_position)
-	print("Layer: ", collision_layer)
-	print("Mask: ", collision_mask)
-	print("Grupo player: ", is_in_group("player"))
-	print("Inventario: ", inventario != null)
-	if inventario:
-		var items = inventario.obtener_items()
-		print("Items en inventario: ", items.size())
-		for i in range(items.size()):
-			var item = items[i]
-			print("  [", i, "] ", item.nombre_ingrediente if item else "null")
-	print("===================\n")
-
-# Función para testing manual de agarrar objetos
-func forzar_agarrar_objeto_cercano():
-	var objetos = buscar_objetos_agarrables_cercanos()
-	if objetos.size() > 0:
-		var objeto = objetos[0]
-		if objeto.has_method("forzar_deteccion_manual"):
-			objeto.forzar_deteccion_manual()
-		objeto.agarrar_objeto()

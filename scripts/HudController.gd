@@ -350,9 +350,6 @@ func _input(event):
 		# Tecla G para tomar orden del cliente
 		if Input.is_action_just_pressed("tomar_orden"):  # Tecla G
 			tomar_orden_cliente()
-		# Tab para debugging
-		elif Input.is_action_just_pressed("ui_text_completion_accept"):  # Tab
-			debug_hud_estado()
 
 func tomar_orden_cliente():
 	"""Función para tomar la orden del cliente más cercano"""
@@ -760,28 +757,3 @@ func mostrar_feedback_pedido(exitoso: bool, cantidad: int):
 	tween.parallel().tween_property(feedback, "scale", Vector2(1.0, 1.0), 0.5)
 	tween.parallel().tween_property(feedback, "modulate:a", 0.0, 2.0)
 	tween.tween_callback(feedback.queue_free)
-
-# === FUNCIÓN DE DEBUGGING ===
-
-func debug_hud_estado():
-	print("\n=== DEBUG HUD DINÁMICO ===")
-	print("GameManager: ", game_manager != null)
-	print("Player: ", player != null)
-	print("Inventario: ", inventario != null)
-	print("Cliente actual: ", cliente_actual != null)
-	print("Pedido actual: ", not pedido_actual.is_empty())
-	print("Panel pedidos visible: ", panel_pedidos.visible if panel_pedidos else "N/A")
-	print("Checkboxes activos: ", checkboxes_ingredientes.size())
-	
-	if inventario:
-		var items = obtener_ingredientes_inventario()
-		print("Items inventario: ", items)
-	
-	if not pedido_actual.is_empty():
-		print("Pedido actual: ", pedido_actual.get("nombre_receta", "Sin nombre"))
-	
-	var clientes = get_tree().get_nodes_in_group("clientes")
-	print("Clientes en escena: ", clientes.size())
-	
-	print("Slots inventario: ", slots_inventario.size())
-	print("===============================\n")

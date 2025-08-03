@@ -21,9 +21,9 @@
             "ingredientes": [
                 "food_ingredient_bun_bottom",
                 "food_ingredient_burger_cooked",
-                "food_ingredient_lettuce_slice",
-                "food_ingredient_tomato_slice",
-                "food_ingredient_cheese_slice",
+                "food_ingredient_lettuce",
+                "food_ingredient_tomato",
+                "food_ingredient_cheese",
                 "food_ingredient_bun_top"
             ],
             "ingredientes_opcionales": [],
@@ -38,12 +38,12 @@
             "ingredientes": [
                 "food_ingredient_bun_bottom",
                 "food_ingredient_vegetableburger_cooked",
-                "food_ingredient_lettuce_slice",
-                "food_ingredient_tomato_slice",
+                "food_ingredient_lettuce",
+                "food_ingredient_tomato",
                 "food_ingredient_bun_top"
             ],
             "ingredientes_opcionales": [
-                "food_ingredient_cheese_slice"
+                "food_ingredient_cheese"
             ],
             "dificultad": "medio",
             "descripcion": "Hamburguesa vegetariana saludable",
@@ -56,12 +56,12 @@
             "ingredientes": [
                 "food_ingredient_bun_bottom",
                 "food_ingredient_burger_cooked",
-                "food_ingredient_cheese_slice",
+                "food_ingredient_cheese",
                 "food_ingredient_bun_top"
             ],
             "ingredientes_opcionales": [
-                "food_ingredient_lettuce_slice",
-                "food_ingredient_tomato_slice"
+                "food_ingredient_lettuce",
+                "food_ingredient_tomato"
             ],
             "dificultad": "facil",
             "descripcion": "Hamburguesa clásica con queso",
@@ -111,7 +111,7 @@
             "categoria": "lechuga_entera",
             "tiempo_corte": 5,
             "requiere_coccion": false,
-            "resultado_corte": "food_ingredient_lettuce_slice"
+            "resultado_corte": "food_ingredient_lettuce"
         },
         "food_ingredient_lettuce_slice": {
             "nombre_display": "Lechuga Cortada",
@@ -124,7 +124,7 @@
             "categoria": "tomate_entero",
             "tiempo_corte": 3,
             "requiere_coccion": false,
-            "resultado_corte": "food_ingredient_tomato_slice"
+            "resultado_corte": "food_ingredient_tomato"
         },
         "food_ingredient_tomato_slice": {
             "nombre_display": "Tomate Cortado",
@@ -137,7 +137,7 @@
             "categoria": "queso_entero",
             "tiempo_corte": 2,
             "requiere_coccion": false,
-            "resultado_corte": "food_ingredient_cheese_slice"
+            "resultado_corte": "food_ingredient_cheese"
         },
         "food_ingredient_cheese_slice": {
             "nombre_display": "Queso Cortado",

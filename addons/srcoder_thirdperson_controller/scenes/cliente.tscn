@@ -8,7 +8,8 @@ radius = 0.274773
 height = 0.721095
 
 [node name="Cliente" type="CharacterBody3D"]
-collision_layer = 8
+collision_layer = 0
+collision_mask = 0
 script = ExtResource("1_gb8u4")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]

@@ -44,10 +44,15 @@ var tiempo_girado := 0.0
 var rotacion_inicial: float
 var rotacion_final: float
 var objetivo_movimiento: Vector3
+var saliendo_hacia_entrada: bool = true 
+var posicion_en_cola: int = 0
+var distancia_cola: float = 1.5  #
 
 # Referencias a nodos (mantener existentes)
 @onready var animation_player: AnimationPlayer = $"character-female-b2/AnimationPlayer"
 @onready var barra_paciencia: ProgressBar = $CanvasLayer/ProgressBar
+@onready var target_recibidor = get_node("/root/TestLevel/geometry/CSGBox3D/wall_orderwindow2")
+@onready var target_salida = get_node("/root/TestLevel/building_B3")
 
 # Referencias al sistema
 var game_manager: Node
@@ -69,7 +74,7 @@ func _ready():
 	inicializar_tipo_cliente()
 	
 	# DEBUG: Mostrar posición inicial
-	global_position = posicion_entrada
+	posicion_entrada = Vector3(-10, 0.7, 0.294)
 	print("DEBUG - Posición inicial del cliente: ", global_position)
 	print("DEBUG - Rotación inicial: ", rotation_degrees)
 	
@@ -82,6 +87,7 @@ func _ready():
 	if barra_paciencia:
 		barra_paciencia.value = 100
 		barra_paciencia.modulate = Color.GREEN
+		barra_paciencia.size = Vector2(50, 10)
 		print("✓ Barra de paciencia configurada")
 	
 	# NUEVO: Iniciar FSM
@@ -165,31 +171,59 @@ func entrar_estado(estado: EstadoCliente):
 		EstadoCliente.COMIENDO:
 			mostrar_indicador_estado("🍽️ Disfrutando")
 		EstadoCliente.SALIENDO_FELIZ:
+			saliendo_hacia_entrada = true 
 			mostrar_indicador_estado("😊 ¡Gracias!")
 			objetivo_movimiento = posicion_entrada
 		EstadoCliente.SALIENDO_ENOJADO:
+			saliendo_hacia_entrada = true 
 			mostrar_indicador_estado("😠 ¡Qué servicio!")
 			objetivo_movimiento = posicion_entrada
 
 # ========== NUEVO: IMPLEMENTACIÓN DE ESTADOS ==========
 func procesar_estado_entrando(delta):
-	# Caminar hacia adelante en X
-	#var direccion = Vector3(1, 0, 0)  # Avanzar en X positivo
-	#translate(direccion * velocidad_base * delta)
-
-	# Rotar para mirar hacia X (alinear -Z local con +X global)
-	#var target_rotation = 0.0  # -90 grados en radianes
+	if not is_instance_valid(target_recibidor):
+		print("ERROR: target_recibidor no válido")
+		return
+	
+	calcular_posicion_en_cola()
+	
+	var posicion_cola = target_recibidor.global_position + Vector3(-posicion_en_cola * distancia_cola, 0, 0)
+	posicion_cola.y = 0.5
+	
+	var distance_to_queue_pos = global_position.distance_to(posicion_cola)
+	
+	# Si estamos cerca del recibidor, cambiar estado (distancia reducida para acercarse más)
 	rotation.y = PI/2
-	var direccion = -transform.basis.x
-	translate(direccion*velocidad_base*delta)
-
-	reproducir_animacion("sprint")
-
-	# Verificar si llegó al recibidor (solo comparar X)
-	if abs(global_position.x - posicion_recibidor.x) < 0.3:
+	if distance_to_queue_pos < 0.5:  # Cambiado de 1.0 a 0.5 para acercarse más
+		velocity = Vector3.ZERO
 		cambiar_estado(EstadoCliente.EN_RECIBIDOR)
-
+	else:
+		# Calcular dirección hacia el recibidor
+		var direction = (posicion_cola - global_position).normalized()
+		velocity = velocity.lerp(direction * velocidad_base, 10.0 * delta)
+	
+	move_and_slide()
+	global_position.y = 0.5
+	reproducir_animacion("walk")
+	
+func calcular_posicion_en_cola():
+	var clientes_antes_que_yo = 0
+	var todos_clientes = get_tree().get_nodes_in_group("clientes")
+	
+	# Contar solo clientes que llegaron ANTES que yo y están esperando
+	for cliente in todos_clientes:
+		if cliente != self and (cliente.estado_actual == EstadoCliente.EN_RECIBIDOR or cliente.estado_actual == EstadoCliente.ESPERANDO_ATENCION) and cliente.get_instance_id() < self.get_instance_id():  # Solo los que llegaron antes
+			clientes_antes_que_yo += 1
+	
+	posicion_en_cola = clientes_antes_que_yo
+	
 func procesar_estado_en_recibidor(delta):
+	calcular_posicion_en_cola()
+	var posicion_cola = target_recibidor.global_position + Vector3(-posicion_en_cola * distancia_cola-0.4, 0, 0)
+	posicion_cola.y = 0.5
+	# Interpola siempre hacia la posición de la cola
+	global_position = global_position.lerp(posicion_cola, 4.0 * delta)
+	
 	# Cliente espera en el recibidor a ser atendido
 	reproducir_animacion("idle")
 	
@@ -198,9 +232,21 @@ func procesar_estado_en_recibidor(delta):
 		cambiar_estado(EstadoCliente.ESPERANDO_ATENCION)
 
 func procesar_estado_esperando_atencion(delta):
+	calcular_posicion_en_cola()
+	var posicion_cola = target_recibidor.global_position + Vector3(-posicion_en_cola * distancia_cola-0.4, 0, 0)
+	posicion_cola.y = 0.5
+	# Interpola siempre hacia la posición de la cola
+	global_position = global_position.lerp(posicion_cola, 4.0 * delta)
+	
+	# Si no soy el primero en la cola, solo esperar en mi posición
+	if posicion_en_cola > 0:
+		reproducir_animacion("idle")
+		tiempo_espera_restante -= delta
+		actualizar_barra_paciencia()
+		return  # Salir sin procesar el resto
+	
 	# INTEGRACIÓN: Cliente espera en el RECIBIDOR a que tomen su orden
 	reproducir_animacion("idle")
-	
 	# Actualizar barra de paciencia
 	tiempo_espera_restante -= delta
 	actualizar_barra_paciencia()
@@ -232,7 +278,7 @@ func procesar_estado_yendo_a_mesa(delta):
 		mover_hacia_objetivo(objetivo_movimiento, delta)
 		reproducir_animacion("sprint")
 		
-		if global_position.distance_to(objetivo_movimiento) < 0.8:
+		if global_position.distance_to(objetivo_movimiento) < 0.3:
 			# Resetear paciencia para esperar la comida
 			tiempo_espera_restante = pedido_asignado.get("paciencia_maxima", 120.0) * modificador_paciencia
 			cambiar_estado(EstadoCliente.ESPERANDO_COMIDA)
@@ -273,46 +319,102 @@ func procesar_estado_pagando(delta):
 		cambiar_estado(EstadoCliente.SALIENDO_FELIZ)
 
 func procesar_estado_saliendo_feliz(delta):
-	# Cliente camina hacia la salida SOLO en eje X
-	# De (0, 0.5, 0.294) a (-10, 0.5, 0.294)
+	if saliendo_hacia_entrada:
+		# FASE 1: Ir hacia la entrada en líneas rectas
+		var distance_to_entrance = global_position.distance_to(posicion_entrada)
+		
+		if distance_to_entrance < 1.0:
+			saliendo_hacia_entrada = false
+			print("Cliente llegó a la entrada, ahora va al edificio")
+		else:
+			# Movimiento en líneas rectas - primero Z, luego X
+			var diff_x = posicion_entrada.x - global_position.x
+			var diff_z = posicion_entrada.z - global_position.z
+			
+			if abs(diff_z) > 0.2:  # Primero moverse en Z
+				rotation.y = PI
+				var direction = Vector3(0, 0, sign(diff_z))
+				velocity = velocity.lerp(direction * velocidad_base, 10.0 * delta)
+			elif abs(diff_x) > 0.2:  # Después moverse en X
+				rotation.y = -PI/2
+				var direction = Vector3(sign(diff_x), 0, 0)
+				velocity = velocity.lerp(direction * velocidad_base, 10.0 * delta)
+			else:
+				velocity = Vector3.ZERO
+	else:
+		# FASE 2: Ir hacia building_B3
+		if not is_instance_valid(target_salida):
+			print("ERROR: building_B3 no válido")
+			return
+		
+		var distance_to_target = global_position.distance_to(target_salida.global_position)
+		
+		if distance_to_target < 5.0:
+			velocity = Vector3.ZERO
+			reproducir_animacion("idle")
+			cliente_se_fue.emit(self)
+			liberar_mesa()
+			programar_eliminacion()
+		else:
+			var direction = (target_salida.global_position - global_position).normalized()
+			velocity = velocity.lerp(direction * velocidad_base, 10.0 * delta)
 	
-	var objetivo_x = objetivo_movimiento.x
-	var direccion_x = sign(objetivo_x - global_position.x)
-	
-	velocity.x = direccion_x * velocidad_base
-	velocity.z = 0  # No moverse en Z
-	velocity.y += get_gravity().y * delta  # Mantener gravedad
+	# Aplicar gravedad
+	if not is_on_floor():
+		velocity.y += get_gravity().y * delta
 	
 	move_and_slide()
+	global_position.y = 0.5
 	reproducir_animacion("sprint")
-	
-	# Verificar si llegó a la salida (solo comparar X)
-	if abs(global_position.x - objetivo_x) < 0.5:
-		# Usar tu señal existente
-		cliente_se_fue.emit(self)
-		liberar_mesa()
-		programar_eliminacion()
 
 func procesar_estado_saliendo_enojado(delta):
-	# Cliente camina molesto hacia la salida SOLO en eje X
-	# De (0, 0.5, 0.294) a (-10, 0.5, 0.294)
+	if saliendo_hacia_entrada:
+		# FASE 1: Ir hacia la entrada en líneas rectas
+		var distance_to_entrance = global_position.distance_to(posicion_entrada)
+		
+		if distance_to_entrance < 1.0:
+			saliendo_hacia_entrada = false
+			print("Cliente llegó a la entrada, ahora va al edificio")
+		else:
+			# Movimiento en líneas rectas - primero Z, luego X
+			var diff_x = posicion_entrada.x - global_position.x
+			var diff_z = posicion_entrada.z - global_position.z
+			
+			if abs(diff_z) > 0.2:  # Primero moverse en Z
+				rotation.y = PI
+				var direction = Vector3(0, 0, sign(diff_z))
+				velocity = velocity.lerp(direction * velocidad_base, 10.0 * delta)
+			elif abs(diff_x) > 0.2:  # Después moverse en X
+				rotation.y = -PI/2
+				var direction = Vector3(sign(diff_x), 0, 0)
+				velocity = velocity.lerp(direction * velocidad_base, 10.0 * delta)
+			else:
+				velocity = Vector3.ZERO
+	else:
+		# FASE 2: Ir hacia building_B3
+		if not is_instance_valid(target_salida):
+			print("ERROR: building_B3 no válido")
+			return
+		
+		var distance_to_target = global_position.distance_to(target_salida.global_position)
+		
+		if distance_to_target < 5.0:
+			velocity = Vector3.ZERO
+			reproducir_animacion("idle")
+			cliente_se_fue.emit(self)
+			liberar_mesa()
+			programar_eliminacion()
+		else:
+			var direction = (target_salida.global_position - global_position).normalized()
+			velocity = velocity.lerp(direction * velocidad_base, 10.0 * delta)
 	
-	var objetivo_x = objetivo_movimiento.x
-	var direccion_x = sign(objetivo_x - global_position.x)
-	
-	velocity.x = direccion_x * velocidad_base
-	velocity.z = 0  # No moverse en Z
-	velocity.y += get_gravity().y * delta  # Mantener gravedad
+	# Aplicar gravedad
+	if not is_on_floor():
+		velocity.y += get_gravity().y * delta
 	
 	move_and_slide()
+	global_position.y = 0.5
 	reproducir_animacion("sprint")
-	
-	# Verificar si llegó a la salida (solo comparar X)
-	if abs(global_position.x - objetivo_x) < 0.5:
-		# Usar tu señal existente
-		cliente_se_fue.emit(self)
-		liberar_mesa()
-		programar_eliminacion()
 
 func marcar_pedido_realizado():
 	"""Marca que el pedido fue tomado por el jugador"""
@@ -446,8 +548,8 @@ func mostrar_indicador_estado(texto: String):
 		var label = Label3D.new()
 		label.name = "InfoPedido"
 		label.text = texto
-		label.font_size = 14
-		label.position = Vector3(0, 2.2, 0)
+		label.font_size = 24
+		label.position = Vector3(0, 1.0, 0)
 		label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 		add_child(label)
 
@@ -574,7 +676,7 @@ func actualizar_ui_posicion():
 	
 	var camera = get_viewport().get_camera_3d()
 	if camera:
-		var head_pos = global_transform.origin + Vector3(0, 2.5, 0)
+		var head_pos = global_transform.origin + Vector3(0, 1.2, 0)
 		var screen_pos = camera.unproject_position(head_pos)
 		
 		var viewport_size = get_viewport().get_visible_rect().size
@@ -583,21 +685,3 @@ func actualizar_ui_posicion():
 			barra_paciencia.visible = true
 		else:
 			barra_paciencia.visible = false
-
-# ========== FUNCIONES DE DEBUG ==========
-func debug_cliente_fsm():
-	print("\n=== DEBUG CLIENTE FSM ===")
-	print("Estado actual: ", EstadoCliente.keys()[estado_actual])
-	print("Tiempo en estado: ", tiempo_en_estado)
-	print("Tipo de cliente: ", tipo_cliente)
-	print("En recibidor: ", en_recibidor)
-	print("Mesa asignada: ", mesa_asignada.name if mesa_asignada else "ninguna")
-	print("Pedido realizado: ", pedido_realizado)
-	print("Tiempo restante: ", tiempo_espera_restante)
-	print("Posición actual: ", global_position)
-	print("Objetivo: ", objetivo_movimiento)
-	print("========================\n")
-
-func forzar_estado(nuevo_estado: EstadoCliente):
-	# Para debugging - forzar cambio a cualquier estado
-	cambiar_estado(nuevo_estado)

@@ -445,20 +445,3 @@ func esta_vacio() -> bool:
 
 func esta_lleno() -> bool:
 	return items.size() >= capacidad_maxima
-
-# Función de debugging
-func debug_inventario():
-	print("\n=== DEBUG INVENTARIO ===")
-	print("Capacidad: ", items.size(), "/", capacidad_maxima)
-	print("Items:")
-	for i in range(items.size()):
-		var item = items[i]
-		if item:
-			var nombre = obtener_nombre_ingrediente_seguro(item)
-			var tipo = detectar_tipo_ingrediente(nombre)
-			print("  [", i, "] ", nombre, " (", tipo, ")")
-		else:
-			print("  [", i, "] NULL")
-	
-	print("Tipos resumen: ", obtener_resumen_tipos())
-	print("=======================\n")

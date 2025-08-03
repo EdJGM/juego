@@ -1,5 +1,10 @@
-RigidBody3D
 CollisionShape3D
+CollisionPolygon3D
+RigidBody3D
+PathFollow3D
+Path3D
+NavigationAgent3D
+NavigationRegion3D
 CharacterBody3D
 TextureRect
 Panel
@@ -7,8 +12,3 @@ TextureButton
 Control
 HBoxContainer
 CheckBox
-Label
-VBoxContainer
-CanvasLayer
-Container
-WorldEnvironment

@@ -28,8 +28,6 @@ var area_deteccion: Area3D
 var indicador_interaccion: Node3D
 
 func _ready():
-	print("ObjetoAgarrable inicializando: ", name)
-	
 	# IMPORTANTE: Solo inicializar si estamos en el juego real
 	var scene_manager = get_node_or_null("/root/SceneManager")
 	if scene_manager and scene_manager.es_menu():
@@ -62,9 +60,6 @@ func _ready():
 	
 	# Crear indicador de interacción
 	await get_tree().process_frame
-	crear_indicador_interaccion()
-	
-	print("✓ ObjetoAgarrable configurado: ", nombre_ingrediente)
 
 func _process(_delta):
 	# Verificar input cada frame si el jugador está cerca
@@ -105,7 +100,7 @@ func crear_area_deteccion_mejorada():
 	# CORRECCIÓN 1: Crear forma de colisión MÁS PEQUEÑA
 	var collision_shape = CollisionShape3D.new()
 	var sphere_shape = SphereShape3D.new()
-	sphere_shape.radius = 1.2  # REDUCIDO de 2.0 a 1.2
+	sphere_shape.radius = 0.3
 	collision_shape.shape = sphere_shape
 	collision_shape.name = "DetectionShape"
 	
@@ -114,32 +109,6 @@ func crear_area_deteccion_mejorada():
 	# Conectar señales con one-shot disabled para múltiples detecciones
 	area_deteccion.body_entered.connect(_on_jugador_entro)
 	area_deteccion.body_exited.connect(_on_jugador_salio)
-	
-	print("✓ Área de detección mejorada creada para ", name, " con radio: ", sphere_shape.radius)
-
-func crear_indicador_interaccion():
-	"""Crea un indicador visual para la interacción"""
-	# Eliminar indicador anterior si existe
-	if has_node("IndicadorInteraccion"):
-		$IndicadorInteraccion.queue_free()
-	
-	indicador_interaccion = Label3D.new()
-	indicador_interaccion.name = "IndicadorInteraccion"
-	indicador_interaccion.text = "[F] " + nombre_ingrediente
-	indicador_interaccion.font_size = 16
-	indicador_interaccion.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-	indicador_interaccion.position = Vector3(0, 2.0, 0)  # Más alto
-	indicador_interaccion.visible = false
-	indicador_interaccion.modulate = Color.YELLOW
-	
-	# Configurar el material del texto para que sea más visible
-	indicador_interaccion.material_override = StandardMaterial3D.new()
-	var material = indicador_interaccion.material_override as StandardMaterial3D
-	material.flags_unshaded = true
-	material.albedo_color = Color.YELLOW
-	
-	add_child(indicador_interaccion)
-	print("✓ Indicador creado para ", name, " con texto: ", indicador_interaccion.text)
 
 func detectar_nombre_desde_escena():
 	"""Detecta el tipo de ingrediente desde el nombre de la escena o nodo"""
@@ -203,18 +172,13 @@ func detectar_nombre_desde_escena():
 			nombre_ingrediente = "food_ingredient_cheese"
 	else:
 		nombre_ingrediente = nombre_detectado.replace("_", "")
-	
-	print("Ingrediente detectado: ", nombre_ingrediente)
 
 func _on_jugador_entro(body):
-	print("Algo entró en el área: ", body.name, " - Es jugador: ", body.is_in_group("player"))
-	
 	if body.is_in_group("player") and puede_agarrarse and not siendo_agarrado:
 		jugador_cerca = true
 		jugador_actual = body
 		mostrar_indicador_interaccion(true)
 		jugador_cerca_cambiado.emit(true)
-		print("✓ Jugador cerca de ", nombre_ingrediente)
 
 func _on_jugador_salio(body):
 	if body.is_in_group("player") and body == jugador_actual:
@@ -222,7 +186,6 @@ func _on_jugador_salio(body):
 		jugador_actual = null
 		mostrar_indicador_interaccion(false)
 		jugador_cerca_cambiado.emit(false)
-		print("Jugador se alejó de ", nombre_ingrediente)
 
 func mostrar_indicador_interaccion(mostrar: bool):
 	"""Muestra u oculta el indicador de interacción"""
@@ -257,7 +220,6 @@ func cambiar_resaltado(activar: bool):
 		else:
 			# Restaurar material original
 			mesh_instance.material_override = null
-		print("Resaltado cambiado para ", name, ": ", activar)
 
 func encontrar_mesh_instance() -> MeshInstance3D:
 	"""Busca recursivamente un MeshInstance3D en los hijos"""
@@ -319,7 +281,7 @@ func intentar_agarrar():
 	agarrar_objeto(inventario)
 
 func agarrar_objeto(inventario: Inventario = null):
-	"""Proceso de agarrar el objeto"""
+	"""Proceso de agarrar el objeto - SIN CAMBIOS"""
 	if siendo_agarrado:
 		print("ERROR: Objeto ya está siendo agarrado")
 		return
@@ -358,22 +320,31 @@ func agarrar_objeto(inventario: Inventario = null):
 		print("ERROR: No se pudo agregar al inventario")
 
 func soltar_objeto(nueva_posicion: Vector3 = Vector3.ZERO):
-	"""CORRECCIÓN 3: Suelta el objeto y lo ELIMINA en lugar de dejarlo en el mundo"""
+	"""MODIFICADO: Restaurar ingredientes en lugar de destruirlos"""
 	if not siendo_agarrado:
 		print("ADVERTENCIA: Objeto no estaba siendo agarrado")
 		return
 	
-	print("Eliminando objeto entregado: ", nombre_ingrediente)
+	print("Restaurando ingrediente: ", nombre_ingrediente)
 	
-	# Cambiar estado PRIMERO
+	# En lugar de queue_free(), restaurar a posición original
 	siendo_agarrado = false
+	freeze = false
+	visible = true
+	collision_layer = 4
+	collision_mask = 1
 	
-	# OPCIÓN A: ELIMINAR EL OBJETO COMPLETAMENTE (RECOMENDADO)
+	# Reactivar área de detección
+	if area_deteccion:
+		area_deteccion.monitoring = true
+	
+	# Restaurar posición original con un pequeño delay para evitar conflictos
+	await get_tree().create_timer(1.0).timeout
+	global_position = posicion_original
+	rotation = rotacion_original
+	
 	objeto_soltado.emit(self)
-	queue_free()  # Eliminar el objeto para siempre
-	
-	# OPCIÓN B: Si prefieres que regrese a su posición original, descomenta esto y comenta lo de arriba:
-	# restaurar_a_posicion_original()
+	print("✓ Ingrediente restaurado: ", nombre_ingrediente)
 
 func restaurar_a_posicion_original():
 	"""Alternativa: restaurar el objeto a su posición original"""
@@ -424,34 +395,3 @@ func detectar_tipo_ingrediente() -> String:
 		return "carne"
 	else:
 		return "generico"
-
-func debug_objeto():
-	print("\n=== DEBUG OBJETO AGARRABLE ===")
-	print("Nombre: ", name)
-	print("Ingrediente: ", nombre_ingrediente)
-	print("Posición: ", global_position)
-	print("Visible: ", visible)
-	print("Collision layer: ", collision_layer)
-	print("Siendo agarrado: ", siendo_agarrado)
-	print("Jugador cerca: ", jugador_cerca)
-	print("Puede agarrarse: ", puede_agarrarse)
-	if area_deteccion:
-		print("Área detección activa: ", area_deteccion.monitoring)
-		print("Bodies en área: ", area_deteccion.get_overlapping_bodies().size())
-		for body in area_deteccion.get_overlapping_bodies():
-			print("  - ", body.name, " (grupo player: ", body.is_in_group("player"), ")")
-	else:
-		print("NO HAY ÁREA DE DETECCIÓN")
-	print("=============================\n")
-
-# Función para forzar detección (debugging)
-func forzar_deteccion_manual():
-	if not area_deteccion:
-		return
-	
-	var bodies = area_deteccion.get_overlapping_bodies()
-	print("Detección manual - Bodies encontrados: ", bodies.size())
-	for body in bodies:
-		if body.is_in_group("player"):
-			_on_jugador_entro(body)
-			break
