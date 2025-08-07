@@ -73,10 +73,8 @@ func _ready():
 	# NUEVO: Configurar tipo de cliente aleatorio
 	inicializar_tipo_cliente()
 	
-	# DEBUG: Mostrar posición inicial
 	posicion_entrada = Vector3(-10, 0.7, 0.294)
-	print("DEBUG - Posición inicial del cliente: ", global_position)
-	print("DEBUG - Rotación inicial: ", rotation_degrees)
+
 	
 	# Configurar animación inicial
 	if animation_player:
@@ -163,7 +161,6 @@ func entrar_estado(estado: EstadoCliente):
 				objetivo_movimiento.y = 0.7
 				objetivo_movimiento.z += 0.0
 				mostrar_indicador_estado("🚶‍♂️ Yendo a mesa")
-				print("DEBUG - Objetivo mesa: ", objetivo_movimiento, " Mesa: ", mesa_asignada.name)
 			else:
 					print("ERROR: No hay mesa asignada")
 		EstadoCliente.ESPERANDO_COMIDA:
@@ -251,8 +248,6 @@ func procesar_estado_esperando_atencion(delta):
 	tiempo_espera_restante -= delta
 	actualizar_barra_paciencia()
 	
-	print("DEBUG - Pedido realizado: ", pedido_realizado, " Mesa asignada: ", mesa_asignada != null)
-	
 	# Si el jugador toma la orden (manejado por HUD con tecla G)
 	if pedido_realizado:
 		# Verificar que tiene mesa asignada antes de ir
@@ -274,7 +269,6 @@ func procesar_estado_esperando_atencion(delta):
 func procesar_estado_yendo_a_mesa(delta):
 	# Cliente camina hacia su mesa asignada
 	if mesa_asignada:
-		print("DEBUG - Posición actual: ", global_position, " Objetivo: ", objetivo_movimiento, " Distancia: ", global_position.distance_to(objetivo_movimiento))
 		mover_hacia_objetivo(objetivo_movimiento, delta)
 		reproducir_animacion("sprint")
 		
@@ -475,7 +469,6 @@ func mover_hacia_objetivo(objetivo: Vector3, delta: float):
 	var direccion = (objetivo - global_position).normalized()
 	# Verificar que la dirección sea válida
 	if direccion.length() < 0.1:
-		print("DEBUG - Ya está en el objetivo")
 		return
 	velocity.x = direccion.x * velocidad_base
 	velocity.z = direccion.z * velocidad_base
@@ -493,8 +486,6 @@ func mover_hacia_objetivo(objetivo: Vector3, delta: float):
 		if look_direction.length() > 0.1:
 			var target_rotation = atan2(look_direction.x, look_direction.z)
 			rotation.y = lerp_angle(rotation.y, target_rotation, 5.0 * delta)
-			
-	print("DEBUG - Moviendo. Velocity: ", velocity, " Dirección: ", direccion)
 
 func get_tiempo_decision() -> float:
 	var tiempo_base = 4.0
@@ -603,8 +594,10 @@ func recibir_pedido_jugador(pedido_jugador: Dictionary) -> bool:
 		print("Pedido del jugador no tiene ingredientes")
 		return false
 	
-	print("Cliente FSM recibiendo pedido del jugador en la mesa...")
-	print("Ingredientes recibidos: ", pedido_jugador.ingredientes)
+	print("\n=== CLIENTE RECIBIENDO PEDIDO ===")
+	print("Cliente esperaba: ", pedido_asignado.get("nombre_receta", "Sin nombre"))
+	print("Ingredientes recibidos del jugador: ", pedido_jugador.ingredientes)
+	print("================================")
 	
 	# Emitir señal para que GameManager valide (tu lógica existente)
 	pedido_entregado.emit(self, pedido_jugador)

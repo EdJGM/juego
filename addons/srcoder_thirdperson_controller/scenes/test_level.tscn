@@ -167,7 +167,7 @@ regenerate = true
 transform = Transform3D(-2.18557e-08, 0, 0.5, 0, 0.5, 0, -0.5, 0, -2.18557e-08, 0, 0.3, -0.249708)
 
 [node name="door_A2" parent="geometry/CSGBox3D/wall_orderwindow2" instance=ExtResource("5_wbfu7")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.8, 0.3, 0)
+transform = Transform3D(-4.37114e-08, 0, 1, 0, 1, 0, -1, 0, -4.37114e-08, 5.8, 0.3, 0)
 script = ExtResource("6_0uo5h")
 
 [node name="Area3D" type="Area3D" parent="geometry/CSGBox3D/wall_orderwindow2/door_A2"]

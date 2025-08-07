@@ -5,6 +5,3 @@ res://Menu_pausa/menu_pausa_pausatheme.tres
 res://Menu_pausa/menu_pausa_theme_normal.tres
 res://Menu_pausa/menu_pausa_pressed.tres
 res://Menu_pausa/menu_pausa.gdshader
-res://scripts/objeto_agarrable.gd
-res://scripts/GameManager.gd
-res://scripts/cliente.gd

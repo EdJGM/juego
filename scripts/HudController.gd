@@ -8,6 +8,9 @@ extends Node3D
 @onready var panel_pedidos = $CanvasLayer/PedidosPanel
 @onready var vbox_pedidos = $CanvasLayer/PedidosPanel/VBoxContainer
 @onready var inventario_panel = $CanvasLayer/Panel
+@onready var barra_progreso_dia = $CanvasLayer/DiaNocheContainer/BarraProgresoDia
+@onready var label_fase_dia = $CanvasLayer/DiaNocheContainer/LabelFaseDia
+@onready var label_tiempo = $CanvasLayer/DiaNocheContainer/LabelTiempo
 
 # Referencias al sistema
 var game_manager: Node
@@ -409,6 +412,8 @@ func _on_dinero_cambiado(nuevo_dinero: int):
 
 func _on_tiempo_cambiado(tiempo_actual: float, fase_dia: String):
 	actualizar_indicador_tiempo(fase_dia)
+	actualizar_barra_progreso_dia(tiempo_actual)  # NUEVA FUNCIÓN
+	actualizar_tiempo_visual(tiempo_actual)  
 
 func _on_cliente_agregado(cliente: Node):
 	print("HUD: Nuevo cliente agregado - ", cliente.name)
@@ -469,16 +474,76 @@ func actualizar_dinero(cantidad: int):
 	if dinero_label:
 		dinero_label.text = "$" + str(cantidad)
 
-func actualizar_indicador_tiempo(fase: String):
+func actualizar_barra_progreso_dia(tiempo_actual: float):
+	"""Actualiza la barra de progreso con colores de franjas"""
+	if not barra_progreso_dia:
+		return
+	
+	var tiempo_total = 480.0
+	var progreso = (tiempo_actual / tiempo_total) * 100.0
+	
+	barra_progreso_dia.value = min(progreso, 100.0)
+	
+	# Colores específicos por franja horaria
+	var franja = obtener_fase_del_dia_por_tiempo(tiempo_actual)
+	match franja:
+		"manana":
+			barra_progreso_dia.modulate = Color.LIGHT_BLUE  # Tranquilo
+		"mediodia":
+			barra_progreso_dia.modulate = Color.RED         # Hora pico intensa
+		"tarde":
+			barra_progreso_dia.modulate = Color.ORANGE      # Moderado
+		"noche":
+			barra_progreso_dia.modulate = Color.PURPLE      # Cierre tranquilo
+
+func actualizar_tiempo_visual(tiempo_actual: float):
+	"""Muestra el tiempo en formato de reloj"""
+	if not label_tiempo:
+		return
+	
+	# Convertir tiempo del juego a horas del día (9:00 AM - 5:00 PM)
+	var tiempo_total = 480.0  # 8 minutos
+	var progreso = tiempo_actual / tiempo_total
+	
+	# 9:00 AM = 9*60 = 540 minutos del día
+	# 5:00 PM = 17*60 = 1020 minutos del día
+	var minutos_inicio = 9 * 60  # 9:00 AM
+	var minutos_fin = 17 * 60    # 5:00 PM
+	var minutos_jornada = minutos_fin - minutos_inicio  # 8 horas = 480 minutos
+	
+	var minutos_actuales = minutos_inicio + (progreso * minutos_jornada)
+	
+	var horas = int(minutos_actuales / 60)
+	var minutos = int(minutos_actuales) % 60
+	
+	label_tiempo.text = "%02d:%02d" % [horas, minutos]
+
+func obtener_fase_del_dia_por_tiempo(tiempo_actual: float) -> String:
+	"""Obtiene la franja horaria basada en el tiempo"""
+	var tiempo_total = 480.0  # 8 minutos
+	var progreso = tiempo_actual / tiempo_total
+	
+	# Franjas horarias corregidas
+	if progreso < 0.25:      # 0% - 25% = 9:00-11:00 AM
+		return "manana"
+	elif progreso < 0.6:     # 25% - 60% = 11:00-2:00 PM (HORA PICO)
+		return "mediodia"
+	elif progreso < 0.85:    # 60% - 85% = 2:00-4:00 PM
+		return "tarde"
+	else:                    # 85% - 100% = 4:00-5:00 PM
+		return "noche"
+
+func actualizar_indicador_tiempo(franja: String):
 	if not sol_icon or not luna_icon:
 		return
 	
-	match fase:
+	# Actualizar iconos según la franja
+	match franja:
 		"manana":
 			sol_icon.modulate = Color.YELLOW
 			luna_icon.modulate = Color.GRAY
 		"mediodia":
-			sol_icon.modulate = Color.WHITE
+			sol_icon.modulate = Color.WHITE  # Sol brillante en hora pico
 			luna_icon.modulate = Color.GRAY
 		"tarde":
 			sol_icon.modulate = Color.ORANGE
@@ -486,6 +551,20 @@ func actualizar_indicador_tiempo(fase: String):
 		"noche":
 			sol_icon.modulate = Color.GRAY
 			luna_icon.modulate = Color.WHITE
+	
+	# Actualizar label de franja
+	if label_fase_dia:
+		match franja:
+			"manana":
+				label_fase_dia.text = "MAÑANA"
+			"mediodia":
+				label_fase_dia.text = "HORA PICO"  # Cambiar texto
+			"tarde":
+				label_fase_dia.text = "TARDE"
+			"noche":
+				label_fase_dia.text = "CIERRE"   # Cambiar texto
+		
+		label_fase_dia.modulate = Color.BLACK
 
 func mostrar_notificacion_cliente():
 	"""Muestra notificación cuando llega un nuevo cliente"""
@@ -699,36 +778,35 @@ func obtener_ingredientes_inventario() -> Array:
 	return nombres
 
 func detectar_tipo_ingrediente(ingrediente_nombre: String) -> String:
+	"""Función sincronizada con GameManager"""
 	if ingrediente_nombre == "":
 		return "generico"
 	
 	var nombre = ingrediente_nombre.to_lower()
 	
-	# Detectar tipos específicos de pan
+	# IMPORTANTE: Usar EXACTAMENTE la misma lógica que GameManager
 	if "bun_bottom" in nombre:
 		return "pan_inferior"
 	elif "bun_top" in nombre:
 		return "pan_superior"
 	elif "bun" in nombre and not ("bottom" in nombre or "top" in nombre):
 		return "pan_generico"
-	# Detectar tipos específicos de carne
 	elif "vegetableburger" in nombre:
-		return "carne_vegetal"
+		return "carne"  # CAMBIO: Mismo que GameManager
 	elif "burger" in nombre or "meat" in nombre or "carne" in nombre:
 		return "carne"
-	# Detectar ingredientes cortados vs enteros
 	elif "tomato_slice" in nombre:
-		return "tomate_cortado"
+		return "tomate"  # CAMBIO: Simplificado
 	elif "tomato" in nombre:
-		return "tomate_entero"
+		return "tomate"
 	elif "lettuce_slice" in nombre:
-		return "lechuga_cortada"
+		return "lechuga"  # CAMBIO: Simplificado
 	elif "lettuce" in nombre:
-		return "lechuga_entera"
+		return "lechuga"
 	elif "cheese_slice" in nombre:
-		return "queso_cortado"
+		return "queso"  # CAMBIO: Simplificado
 	elif "cheese" in nombre:
-		return "queso_entero"
+		return "queso"
 	elif "sauce" in nombre or "salsa" in nombre or "ketchup" in nombre or "mustard" in nombre:
 		return "salsa"
 	else:

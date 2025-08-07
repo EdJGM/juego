@@ -214,45 +214,37 @@ func verificar_ingredientes_para_pedido(pedido: Dictionary) -> bool:
 	return true
 
 func detectar_tipo_ingrediente(nombre_ingrediente: String) -> String:
-	"""Detecta el tipo de ingrediente basado en su nombre"""
+	"""Función sincronizada con GameManager y HudController"""
 	if nombre_ingrediente == "":
 		return "generico"
 	
 	var nombre = nombre_ingrediente.to_lower()
 	
-	# Detectar tipos específicos de pan
+	# IMPORTANTE: EXACTAMENTE la misma lógica
 	if "bun_bottom" in nombre:
 		return "pan_inferior"
 	elif "bun_top" in nombre:
 		return "pan_superior"
 	elif "bun" in nombre and not ("bottom" in nombre or "top" in nombre):
 		return "pan_generico"
-	# Detectar tipos específicos de carne
 	elif "vegetableburger" in nombre:
-		return "carne_vegetal"
+		return "carne"  # CAMBIO: Tratarla como carne
 	elif "burger" in nombre or "meat" in nombre or "carne" in nombre:
 		return "carne"
-	# Detectar ingredientes cortados vs enteros
 	elif "tomato_slice" in nombre:
-		return "tomate_cortado"
+		return "tomate"  # CAMBIO: Simplificado
 	elif "tomato" in nombre:
-		return "tomate_entero"
+		return "tomate"
 	elif "lettuce_slice" in nombre:
-		return "lechuga_cortada"
+		return "lechuga"  # CAMBIO: Simplificado
 	elif "lettuce" in nombre:
-		return "lechuga_entera"
+		return "lechuga"
 	elif "cheese_slice" in nombre:
-		return "queso_cortado"
+		return "queso"  # CAMBIO: Simplificado
 	elif "cheese" in nombre:
-		return "queso_entero"
+		return "queso"
 	elif "sauce" in nombre or "salsa" in nombre or "ketchup" in nombre or "mustard" in nombre:
 		return "salsa"
-	elif "onion" in nombre or "cebolla" in nombre:
-		return "cebolla"
-	elif "carrot" in nombre or "zanahoria" in nombre:
-		return "zanahoria"
-	elif "potato" in nombre or "papa" in nombre or "patata" in nombre:
-		return "papa"
 	else:
 		return "generico"
 
