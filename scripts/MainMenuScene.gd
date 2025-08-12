@@ -154,6 +154,7 @@ func setup_music():
 		return
 	music_player.stream = menu_music
 	music_player.play()
+	music_player.stop()
 	print("✓ Música del menú iniciada")
 
 func setup_ui():

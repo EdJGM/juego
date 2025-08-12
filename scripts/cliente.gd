@@ -86,7 +86,6 @@ func _ready():
 		barra_paciencia.value = 100
 		barra_paciencia.modulate = Color.GREEN
 		barra_paciencia.size = Vector2(50, 10)
-		print("✓ Barra de paciencia configurada")
 	
 	# NUEVO: Iniciar FSM
 	cambiar_estado(EstadoCliente.ENTRANDO)
@@ -149,8 +148,8 @@ func entrar_estado(estado: EstadoCliente):
 			objetivo_movimiento = posicion_recibidor
 		EstadoCliente.EN_RECIBIDOR:
 			en_recibidor = true
-			# Generar pedido cuando llega al recibidor
-			generar_pedido_segun_tipo()
+			# CORRECCIÓN: NO generar pedido aquí - ya lo asignó GameManager
+			# El GameManager ya generó y asignó el pedido en spawn_cliente()
 			mostrar_indicador_estado("📋 Esperando mesero")
 		EstadoCliente.ESPERANDO_ATENCION:
 			mostrar_indicador_estado("🙋‍♂️ Listo para ordenar")
@@ -235,18 +234,26 @@ func procesar_estado_esperando_atencion(delta):
 	# Interpola siempre hacia la posición de la cola
 	global_position = global_position.lerp(posicion_cola, 4.0 * delta)
 	
+	# Actualizar barra de paciencia para TODOS los clientes en cola
+	tiempo_espera_restante -= delta
+	actualizar_barra_paciencia()
+	
+	# NUEVO: Si cualquier cliente en cola se queda sin paciencia, se va
+	if tiempo_espera_restante <= 0:
+		if posicion_en_cola > 0:
+			print("🚶‍♂️ Cliente en posición ", posicion_en_cola, " se cansó de esperar en la cola y se va")
+		else:
+			print("🚶‍♂️ Cliente en el frente se cansó de esperar y se va")
+		cambiar_estado(EstadoCliente.SALIENDO_ENOJADO)
+		return
+	
 	# Si no soy el primero en la cola, solo esperar en mi posición
 	if posicion_en_cola > 0:
 		reproducir_animacion("idle")
-		tiempo_espera_restante -= delta
-		actualizar_barra_paciencia()
-		return  # Salir sin procesar el resto
+		return  # Solo esperar, no procesar orden
 	
-	# INTEGRACIÓN: Cliente espera en el RECIBIDOR a que tomen su orden
+	# SOLO EL PRIMER CLIENTE puede ser atendido
 	reproducir_animacion("idle")
-	# Actualizar barra de paciencia
-	tiempo_espera_restante -= delta
-	actualizar_barra_paciencia()
 	
 	# Si el jugador toma la orden (manejado por HUD con tecla G)
 	if pedido_realizado:
@@ -255,16 +262,11 @@ func procesar_estado_esperando_atencion(delta):
 			mesa_asignada = buscar_mesa_libre()
 		
 		if mesa_asignada:
-			print("✓ Cliente yendo a mesa: ", mesa_asignada.name)
+			print("✓ Cliente del frente yendo a mesa: ", mesa_asignada.name)
 			cambiar_estado(EstadoCliente.YENDO_A_MESA)
 		else:
 			print("No hay mesas disponibles - cliente se va molesto")
 			cambiar_estado(EstadoCliente.SALIENDO_ENOJADO)
-	
-	# Si se agota la paciencia en el recibidor
-	if tiempo_espera_restante <= 0:
-		print("Cliente se va - no tomaron su orden en el recibidor")
-		cambiar_estado(EstadoCliente.SALIENDO_ENOJADO)
 
 func procesar_estado_yendo_a_mesa(delta):
 	# Cliente camina hacia su mesa asignada
@@ -296,10 +298,6 @@ func procesar_estado_esperando_comida(delta):
 	# Actualizar barra de paciencia
 	tiempo_espera_restante -= delta
 	actualizar_barra_paciencia()
-	
-	# Debug: mostrar que está esperando
-	if int(tiempo_en_estado) % 5 == 0 and tiempo_en_estado > 4.5:
-		print("🍽️ Cliente esperando comida en mesa - Paciencia restante: ", "%.1f" % tiempo_espera_restante)
 	
 	# La entrega se maneja en tu código existente con la función recibir_pedido_jugador()
 	
@@ -451,30 +449,79 @@ func inicializar_tipo_cliente():
 			print("Cliente normal generado")
 
 func buscar_mesa_libre() -> Node3D:
-	var mesas = get_tree().get_nodes_in_group("tables")
-	if mesas.is_empty():
-		print("⚠️ No hay mesas en el grupo 'tables'")
+	"""Busca una mesa libre usando el sistema global de reservas"""
+	if not game_manager:
+		print("⚠️ No hay GameManager para buscar mesa")
 		return null
 	
-	for mesa in mesas:
-		# Verificar si la mesa está libre (puedes agregar lógica más compleja aquí)
-		if not tiene_cliente_cerca(mesa):
-			print("✓ Mesa libre encontrada: ", mesa.name)
-			return mesa
+	# Usar el sistema global de reservas del GameManager
+	var mesa_encontrada = null
+	if game_manager.has_method("buscar_mesa_libre_global"):
+		mesa_encontrada = game_manager.buscar_mesa_libre_global()
+	
+	if mesa_encontrada:
+		# Reservar la mesa inmediatamente
+		if game_manager.has_method("reservar_mesa"):
+			if game_manager.reservar_mesa(mesa_encontrada):
+				print("✓ Mesa reservada exitosamente: ", mesa_encontrada.name)
+				return mesa_encontrada
+			else:
+				print("⚠️ No se pudo reservar la mesa")
+				return null
+		else:
+			# Fallback si no hay sistema de reservas
+			return mesa_encontrada
 	
 	print("⚠️ No hay mesas libres disponibles")
 	return null
 
-func tiene_cliente_cerca(mesa: Node3D) -> bool:
+func esta_mesa_ocupada(mesa: Node3D) -> bool:
+	"""Verifica si una mesa está ocupada por otro cliente"""
 	var clientes = get_tree().get_nodes_in_group("clientes")
 	for cliente in clientes:
-		if cliente != self and cliente.global_position.distance_to(mesa.global_position) < 2.0:
-			return true
+		if cliente != self:
+			# Verificar si el cliente tiene esta mesa asignada
+			if "mesa_asignada" in cliente and cliente.mesa_asignada == mesa:
+				return true
+			# O si está físicamente cerca de la mesa
+			if cliente.global_position.distance_to(mesa.global_position) < 2.5:
+				return true
 	return false
+
+func calcular_distancia_minima_a_otros_clientes(mesa: Node3D) -> float:
+	"""Calcula la distancia mínima desde esta mesa a otros clientes sentados"""
+	var distancia_minima = 999.0  # Valor grande inicial
+	var clientes = get_tree().get_nodes_in_group("clientes")
+	
+	for cliente in clientes:
+		if cliente != self:
+			# Solo considerar clientes que están en mesas (no en cola)
+			if "estado_actual" in cliente:
+				var estado = cliente.estado_actual
+				# Estados: ESPERANDO_COMIDA = 4, COMIENDO = 5
+				if estado == 4 or estado == 5:  # EstadoCliente.ESPERANDO_COMIDA or EstadoCliente.COMIENDO
+					var distancia = mesa.global_position.distance_to(cliente.global_position)
+					if distancia < distancia_minima:
+						distancia_minima = distancia
+	
+	# Si no hay otros clientes en mesas, devolver distancia grande
+	if distancia_minima == 999.0:
+		return 100.0  # Mesa completamente libre
+	
+	return distancia_minima
+
+func tiene_cliente_cerca(mesa: Node3D) -> bool:
+	"""Función legacy - mantenida para compatibilidad"""
+	return esta_mesa_ocupada(mesa)
 
 func liberar_mesa():
 	if mesa_asignada:
 		print("Mesa liberada: ", mesa_asignada.name)
+		
+		# Liberar también la reserva en el GameManager
+		if game_manager and game_manager.has_method("liberar_reserva_mesa"):
+			game_manager.liberar_reserva_mesa(mesa_asignada)
+		
 		mesa_asignada = null
 
 func mover_hacia_objetivo(objetivo: Vector3, delta: float):
@@ -594,42 +641,69 @@ func asignar_pedido(pedido: Dictionary):
 	# MODIFICADO: Ahora se llama desde generar_pedido_segun_tipo()
 	pedido_asignado = pedido
 	tiempo_espera_restante = pedido.get("paciencia_maxima", 120.0) * modificador_paciencia
-	print("Cliente FSM recibió pedido: ", pedido_asignado.get("nombre_receta", "Desconocido"))
+	print("👤 CLIENTE: Asignando pedido ", pedido_asignado.get("nombre_receta", "Desconocido"), " al cliente ", name)
+	if pedido_asignado.has("datos_receta"):
+		print("   Datos receta: ", pedido_asignado.datos_receta.get("nombre", "Sin nombre"))
+		print("   Ingredientes: ", pedido_asignado.datos_receta.get("ingredientes", []))
 
 func recibir_pedido_jugador(pedido_jugador: Dictionary) -> bool:
-	# INTEGRACIÓN: Mantener tu lógica existente - ahora se entrega en la MESA
 	if estado_actual != EstadoCliente.ESPERANDO_COMIDA:
-		print("Cliente no está esperando comida en la mesa actualmente")
+		print("❌ ENTREGA: Cliente no está esperando comida - Estado: ", obtener_estado_actual_string())
 		return false
 	
 	if not pedido_jugador.has("ingredientes"):
-		print("Pedido del jugador no tiene ingredientes")
+		print("❌ ENTREGA: Pedido sin ingredientes")
 		return false
 	
-	print("\n=== CLIENTE RECIBIENDO PEDIDO ===")
-	print("Cliente esperaba: ", pedido_asignado.get("nombre_receta", "Sin nombre"))
-	print("Ingredientes recibidos del jugador: ", pedido_jugador.ingredientes)
-	print("================================")
+	if pedido_jugador.ingredientes.is_empty():
+		print("❌ ENTREGA: Lista de ingredientes vacía")
+		return false
 	
-	# Emitir señal para que GameManager valide (tu lógica existente)
+	print("📥 ENTREGA: Cliente recibe pedido - Esperaba: ", pedido_asignado.get("nombre_receta", "Sin nombre"))
+	
+	# Emitir señal para que GameManager valide
+	# NOTA: El GameManager determinará si es correcto o incorrecto
+	# Si es incorrecto, llamará marcharse_enojado()
 	pedido_entregado.emit(self, pedido_jugador)
 	
 	return true
 
 func marchar_satisfecho():
-	# MODIFICADO: Cambiar estado en lugar de lógica directa
-	print("Cliente FSM marchando satisfecho")
+	print("✅ ENTREGA: Cliente satisfecho - Estado antes: ", obtener_estado_actual_string())
+	
 	if barra_paciencia:
 		barra_paciencia.modulate = Color.GREEN
 		barra_paciencia.value = 100
 	
-	# Cambiar al estado de comiendo (opcional) o directo a pagando
+	# Asegurar que cambie de estado correctamente
 	if estado_actual == EstadoCliente.ESPERANDO_COMIDA:
 		cambiar_estado(EstadoCliente.COMIENDO)
+	elif estado_actual == EstadoCliente.COMIENDO:
+		cambiar_estado(EstadoCliente.PAGANDO)
+	else:
+		print("⚠️ ENTREGA: Estado inesperado: ", obtener_estado_actual_string())
+		cambiar_estado(EstadoCliente.COMIENDO)
+
+func marcharse_enojado(mensaje: String = "¡Esto no es lo que pedí!"):
+	"""Cliente se va enojado por pedido incorrecto"""
+	print("😡 ENTREGA: Cliente enojado - ", mensaje)
+	
+	if barra_paciencia:
+		barra_paciencia.modulate = Color.RED
+		barra_paciencia.value = 0
+	
+	# Mostrar mensaje de enojo
+	mostrar_indicador_estado("😡 " + mensaje)
+	
+	# Cambiar al estado de saliendo enojado
+	cambiar_estado(EstadoCliente.SALIENDO_ENOJADO)
 
 # Mantener funciones existentes de utilidad
 func obtener_pedido() -> Dictionary:
-	return pedido_asignado.duplicate()
+	var pedido = pedido_asignado.duplicate()
+	if not pedido.is_empty() and pedido.has("datos_receta"):
+		print("🎯 CLIENTE: Devolviendo pedido ", pedido.datos_receta.get("nombre", "Sin nombre"), " del cliente ", name)
+	return pedido
 
 func obtener_ingredientes_requeridos() -> Array:
 	if pedido_asignado.has("datos_receta"):

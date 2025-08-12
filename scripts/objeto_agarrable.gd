@@ -22,6 +22,10 @@ var posicion_original: Vector3
 var rotacion_original: Vector3
 var resaltado: bool = false
 
+# Control de cooldown para evitar múltiples agarres
+var ultimo_agarre_tiempo: float = 0.0
+var cooldown_agarre: float = 0.5  # Medio segundo entre agarres
+
 # Referencias
 var jugador_actual: Node = null
 var area_deteccion: Area3D
@@ -62,11 +66,8 @@ func _ready():
 	await get_tree().process_frame
 
 func _process(_delta):
-	# Verificar input cada frame si el jugador está cerca
-	if jugador_cerca and puede_agarrarse and not siendo_agarrado:
-		if Input.is_action_just_pressed("interactuar"):
-			print("PROCESO: Tecla F detectada para ", nombre_ingrediente)
-			intentar_agarrar()
+	# NO PROCESAR INPUT AQUÍ - Se maneja globalmente en el jugador
+	pass
 
 func configurar_propiedades_fisicas():
 	"""Configura las propiedades físicas del objeto"""
@@ -160,6 +161,15 @@ func detectar_nombre_desde_escena():
 		else:
 			nombre_ingrediente = "food_ingredient_cheese"
 			requiere_corte = true
+	# NUEVOS INGREDIENTES
+	elif "ham" in nombre_detectado and "cooked" in nombre_detectado:
+		nombre_ingrediente = "food_ingredient_ham_cooked"
+	elif "steak" in nombre_detectado and "pieces" in nombre_detectado:
+		nombre_ingrediente = "food_ingredient_steak_pieces"
+	elif "onion" in nombre_detectado and "chopped" in nombre_detectado:
+		nombre_ingrediente = "food_ingredient_onion_chopped"
+	elif "carrot" in nombre_detectado:
+		nombre_ingrediente = "food_ingredient_carrot"
 	elif "crate" in nombre_detectado:
 		# Detectar tipo de caja
 		if "buns" in nombre_detectado:
@@ -170,8 +180,16 @@ func detectar_nombre_desde_escena():
 			nombre_ingrediente = "food_ingredient_lettuce"
 		elif "cheese" in nombre_detectado:
 			nombre_ingrediente = "food_ingredient_cheese"
+		elif "ham" in nombre_detectado:
+			nombre_ingrediente = "food_ingredient_ham_cooked"
+		elif "carrots" in nombre_detectado:
+			nombre_ingrediente = "food_ingredient_carrot"
+		elif "onions" in nombre_detectado:
+			nombre_ingrediente = "food_ingredient_onion_chopped"
 	else:
 		nombre_ingrediente = nombre_detectado.replace("_", "")
+	
+	print("✓ Objeto detectado: ", name, " → ", nombre_ingrediente)
 
 func _on_jugador_entro(body):
 	if body.is_in_group("player") and puede_agarrarse and not siendo_agarrado:
@@ -240,29 +258,16 @@ func buscar_mesh_recursivo(node: Node) -> MeshInstance3D:
 	return null
 
 func _input(event):
-	# Solo procesar eventos de teclado para evitar errores con mouse motion
-	if not event is InputEventKey or not event.pressed:
-		return
-		
-	# Solo procesar input si el objeto no está siendo agarrado y estamos en juego
-	var scene_manager = get_node_or_null("/root/SceneManager")
-	if scene_manager and scene_manager.es_menu():
-		return
-		
-	if not jugador_cerca or not puede_agarrarse or siendo_agarrado:
-		return
-	
-	if Input.is_action_just_pressed("interactuar"):  # Tecla F
-		print("Tecla F presionada cerca de ", nombre_ingrediente)
-		intentar_agarrar()
+	# SISTEMA DESHABILITADO - EL PLAYER MANEJA TODA LA INTERACCIÓN
+	return
 
 func intentar_agarrar():
 	"""Intenta que el jugador agarre este objeto"""
-	if not jugador_actual or siendo_agarrado:
-		print("No se puede agarrar: jugador=", jugador_actual != null, ", siendo_agarrado=", siendo_agarrado)
+	if not jugador_actual:
+		print("No se puede agarrar: no hay jugador")
 		return
 	
-	print("Intentando agarrar objeto: ", nombre_ingrediente)
+	print("🎯 INTENTANDO AGARRAR: ", nombre_ingrediente)
 	
 	# Verificar que el jugador tenga inventario
 	var inventario = null
@@ -277,15 +282,11 @@ func intentar_agarrar():
 		print("ADVERTENCIA: Inventario del jugador está lleno")
 		return
 	
-	# Agarrar el objeto
+	# Agarrar el objeto (crear clon)
 	agarrar_objeto(inventario)
 
 func agarrar_objeto(inventario: Inventario = null):
-	"""Proceso de agarrar el objeto - SIN CAMBIOS"""
-	if siendo_agarrado:
-		print("ERROR: Objeto ya está siendo agarrado")
-		return
-	
+	"""Proceso de agarrar el objeto - CREAR CLON PARA INVENTARIO"""
 	# Obtener inventario si no se pasó como parámetro
 	if not inventario and jugador_actual and jugador_actual.has_method("obtener_inventario"):
 		inventario = jugador_actual.obtener_inventario()
@@ -294,40 +295,41 @@ func agarrar_objeto(inventario: Inventario = null):
 		print("ERROR: No se pudo obtener inventario para agarrar objeto")
 		return
 	
-	print("Agarrando objeto: ", nombre_ingrediente)
+	print("Clonando objeto para inventario: ", nombre_ingrediente)
 	
-	# Agregar al inventario PRIMERO
-	if inventario.agregar_item(self):
-		# Solo después de agregarlo exitosamente, cambiar estado
-		siendo_agarrado = true
-		freeze = true
-		
-		# Ocultar el objeto en el mundo
-		visible = false
-		collision_layer = 0
-		collision_mask = 0
-		
-		# Ocultar indicadores
-		mostrar_indicador_interaccion(false)
-		
-		# Deshabilitar área de detección
-		if area_deteccion:
-			area_deteccion.monitoring = false
-		
-		objeto_agarrado.emit(self)
-		print("✓ Objeto agarrado exitosamente: ", nombre_ingrediente)
+	# CREAR UN CLON DEL OBJETO para el inventario
+	var objeto_clonado = crear_clon_para_inventario()
+	if objeto_clonado:
+		# Agregar el CLON al inventario (no el objeto original)
+		if inventario.agregar_item(objeto_clonado):
+			print("✓ Clon agregado al inventario: ", nombre_ingrediente)
+			# El objeto original SE MANTIENE en su lugar
+			objeto_agarrado.emit(objeto_clonado)
+		else:
+			# Si no se pudo agregar, eliminar el clon
+			objeto_clonado.queue_free()
+			print("ERROR: No se pudo agregar clon al inventario")
 	else:
-		print("ERROR: No se pudo agregar al inventario")
+		print("ERROR: No se pudo crear clon del objeto")
 
 func soltar_objeto(nueva_posicion: Vector3 = Vector3.ZERO):
-	"""MODIFICADO: Restaurar ingredientes en lugar de destruirlos"""
+	"""Soltar objeto - restaurar o eliminar según contexto"""
 	if not siendo_agarrado:
 		print("ADVERTENCIA: Objeto no estaba siendo agarrado")
 		return
 	
-	print("Restaurando ingrediente: ", nombre_ingrediente)
+	print("Soltando ingrediente: ", nombre_ingrediente)
 	
-	# En lugar de queue_free(), restaurar a posición original
+	# CORRECCIÓN: Respawnear el objeto cuando se entrega un pedido
+	# Si el jugador actual tiene un inventario que está entregando, respawnear
+	if jugador_actual and jugador_actual.has_node("Inventario"):
+		var inventario = jugador_actual.get_node("Inventario")
+		if inventario.has_method("esta_entregando_pedido") and inventario.esta_entregando_pedido():
+			print("Respawneando ingrediente entregado: ", nombre_ingrediente)
+			respawnear_objeto()
+			return
+	
+	# Si no está entregando, restaurar a posición original
 	siendo_agarrado = false
 	freeze = false
 	visible = true
@@ -381,17 +383,87 @@ func obtener_info() -> Dictionary:
 func detectar_tipo_ingrediente() -> String:
 	var nombre = nombre_ingrediente.to_lower()
 	
-	if "bun" in nombre:
-		return "pan"
+	# Detectar tipos específicos de pan
+	if "bun_bottom" in nombre:
+		return "pan_inferior"
+	elif "bun_top" in nombre:
+		return "pan_superior"
+	elif "bun" in nombre:
+		return "pan_generico"
+	# Detectar carnes
+	elif "vegetableburger" in nombre:
+		return "carne_vegetal"
 	elif "burger" in nombre or "meat" in nombre:
 		return "carne"
+	elif "ham_cooked" in nombre:
+		return "pollo"
+	elif "steak_pieces" in nombre:
+		return "carne_frita"
+	# Detectar vegetales
 	elif "lettuce" in nombre:
 		return "lechuga"
 	elif "tomato" in nombre:
 		return "tomate"
+	elif "onion_chopped" in nombre:
+		return "cebolla_picada"
+	elif "onion" in nombre:
+		return "cebolla"
+	elif "carrot" in nombre:
+		return "zanahoria"
+	# Otros ingredientes
 	elif "cheese" in nombre:
 		return "queso"
-	elif "vegetableburger" in nombre:
-		return "carne"
 	else:
-		return "generico"
+		return nombre_ingrediente  # Retornar el nombre del ingrediente en lugar de "generico"
+
+func respawnear_objeto():
+	"""Respawnea el objeto después de ser entregado"""
+	print("🔄 RESPAWNEANDO: ", nombre_ingrediente)
+	
+	# Resetear estado
+	siendo_agarrado = false
+	freeze = false
+	visible = true
+	collision_layer = 4
+	collision_mask = 1
+	
+	# Restaurar posición original
+	global_position = posicion_original
+	rotation = rotacion_original
+	
+	# Reactivar área de detección
+	if area_deteccion:
+		area_deteccion.monitoring = true
+	
+	# Resetear referencias
+	jugador_cerca = false
+	jugador_actual = null
+	
+	# Emitir señal
+	objeto_soltado.emit(self)
+	
+	print("✅ RESPAWNEADO: ", nombre_ingrediente, " en posición original")
+
+func crear_clon_para_inventario() -> ObjetoAgarrable:
+	"""Crea un clon invisible del objeto para el inventario"""
+	var clon = ObjetoAgarrable.new()
+	
+	# Copiar propiedades del objeto original
+	clon.nombre_ingrediente = nombre_ingrediente
+	clon.es_ingrediente = es_ingrediente
+	clon.puede_agarrarse = puede_agarrarse
+	clon.valor_nutricional = valor_nutricional
+	clon.tiempo_coccion = tiempo_coccion
+	clon.requiere_corte = requiere_corte
+	
+	# El clon está "siendo agarrado" desde su creación
+	clon.siendo_agarrado = true
+	clon.visible = false
+	clon.collision_layer = 0
+	clon.collision_mask = 0
+	
+	# Agregar el clon al árbol de escenas temporalmente (necesario para que funcione)
+	get_tree().current_scene.add_child(clon)
+	
+	print("📦 Clon creado: ", nombre_ingrediente)
+	return clon
