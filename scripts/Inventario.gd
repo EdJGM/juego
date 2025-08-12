@@ -300,46 +300,55 @@ func entregar_a_cliente_cercano():
 	
 	var clientes = get_tree().get_nodes_in_group("clientes")
 	var cliente_mas_cercano = null
-	var distancia_minima = 4.0  # Distancia máxima para entregar
+	var distancia_minima = 5.0  # Aumentar distancia máxima para entregar
 	
-	print("Buscando clientes cerca... Clientes encontrados: ", clientes.size())
+	print("\n🔍 Buscando clientes cerca... Clientes encontrados: ", clientes.size())
+	print("Posición del jugador: ", jugador.global_position)
 	
-	for cliente in clientes:
-		var distancia = jugador.global_position.distance_to(cliente.global_position)
-		print("Cliente a distancia: ", distancia, " - Estado: ", obtener_estado_cliente(cliente))
+	for i in range(clientes.size()):
+		var cliente = clientes[i]
+		if not is_instance_valid(cliente):
+			continue
 			
-		if cliente.has_method("recibir_pedido_jugador") and esta_esperando_comida(cliente):
+		var distancia = jugador.global_position.distance_to(cliente.global_position)
+		var estado = obtener_estado_cliente(cliente)
+		var puede_recibir = esta_esperando_comida(cliente)
+		
+		print("Cliente ", i, ":")
+		print("  - Posición: ", cliente.global_position)
+		print("  - Distancia: ", "%.2f" % distancia)
+		print("  - Estado: ", estado)
+		print("  - Puede recibir: ", puede_recibir)
+		
+		if cliente.has_method("recibir_pedido_jugador") and puede_recibir:
 			if distancia < distancia_minima:
 				distancia_minima = distancia
 				cliente_mas_cercano = cliente
+				print("  ✅ Cliente candidato para entrega")
+			else:
+				print("  ❌ Muy lejos (", "%.2f" % distancia, " > ", distancia_minima, ")")
+		else:
+			print("  ❌ No puede recibir pedido")
 				
 	if cliente_mas_cercano:
-		print("Intentando entregar pedido a cliente cercano")
+		print("\n🍽️ Intentando entregar pedido a cliente más cercano (distancia: ", "%.2f" % distancia_minima, ")")
 		if entregar_pedido_a_cliente(cliente_mas_cercano):
-			print("✓ Pedido entregado exitosamente")
+			print("✅ Pedido entregado exitosamente")
 		else:
-			print("✗ Fallo al entregar pedido")
+			print("❌ Fallo al entregar pedido")
 	else:
-		print("No hay clientes cerca esperando pedidos")
-		
-		# Debug: mostrar todos los clientes
-		if clientes.size() > 0:
-			print("Clientes activos:")
-			for i in range(clientes.size()):
-				var cliente = clientes[i]
-				var distancia = jugador.global_position.distance_to(cliente.global_position)
-				var esperando = cliente.esta_esperando() if cliente.has_method("esta_esperando") else "método no encontrado"
-				print("  Cliente ", i, ": distancia=", distancia, ", esperando=", esperando)
+		print("\n❌ No hay clientes cerca esperando pedidos")
+		print("Aumenta la distancia o verifica que haya clientes en estado ESPERANDO_COMIDA")
 
 func obtener_estado_cliente(cliente: Node) -> String:
 	"""Obtiene el estado actual del cliente para debugging"""
-	if cliente.has_method("debug_cliente_fsm"):
-		# Si tiene FSM, obtener el estado
-		if "estado_actual" in cliente:
-			var estado_enum = cliente.estado_actual
-			if cliente.has_method("get") and cliente.get("EstadoCliente"):
-				return str(estado_enum)  # Convertir enum a string
-			return "Estado: " + str(estado_enum)
+	if cliente.has_method("obtener_estado_actual_string"):
+		return cliente.obtener_estado_actual_string()
+	
+	if "estado_actual" in cliente:
+		var estado_enum = cliente.estado_actual
+		return "Estado_" + str(estado_enum)
+	
 	return "Desconocido"
 
 func esta_esperando_comida(cliente: Node) -> bool:
@@ -347,20 +356,26 @@ func esta_esperando_comida(cliente: Node) -> bool:
 	if not cliente.has_method("recibir_pedido_jugador"):
 		return false
 	
-	# CORRECCIÓN: Verificar directamente si puede recibir pedido
-	# En lugar de verificar el enum, hacer una prueba directa
-	if "estado_actual" in cliente:
-		# Crear un pedido de prueba para ver si lo puede recibir
-		var pedido_prueba = {"ingredientes": ["test"]}
-		
-		# Guardar el estado actual para debugging
-		var estado = cliente.estado_actual
-		print("DEBUG - Estado del cliente: ", estado, " (4=ESPERANDO_COMIDA)")
-		
-		# Si está en estado 4 (ESPERANDO_COMIDA), puede recibir
-		return estado == 4
+	# CORRECCIÓN: Usar la nueva función específica del cliente
+	if cliente.has_method("esta_esperando_comida_en_mesa"):
+		var esperando = cliente.esta_esperando_comida_en_mesa()
+		if esperando:
+			print("✅ Cliente está esperando comida en mesa")
+		return esperando
 	
-	# Fallback para clientes sin FSM
+	# CORRECCIÓN: Verificar el estado usando la función de string
+	if cliente.has_method("obtener_estado_actual_string"):
+		var estado_string = cliente.obtener_estado_actual_string()
+		print("DEBUG - Estado del cliente: ", estado_string)
+		return estado_string == "ESPERANDO_COMIDA"
+	
+	# Fallback original mejorado
+	if "estado_actual" in cliente:
+		var estado = cliente.estado_actual
+		print("DEBUG - Estado del cliente (enum): ", estado, " (4=ESPERANDO_COMIDA)")
+		return estado == 4  # EstadoCliente.ESPERANDO_COMIDA
+	
+	# Último fallback para clientes sin FSM
 	if cliente.has_method("esta_esperando"):
 		return cliente.esta_esperando()
 	

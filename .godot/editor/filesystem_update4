@@ -1,3 +1,5 @@
+res://scripts/cliente.gd
+res://scripts/Inventario.gd
 res://addons/srcoder_thirdperson_controller/scenes/test_level.tscn
 res://scripts/SceneManager.gd
 res://Menu_pausa/menu_pausa_hover.tres

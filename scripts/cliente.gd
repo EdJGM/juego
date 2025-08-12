@@ -272,9 +272,10 @@ func procesar_estado_yendo_a_mesa(delta):
 		mover_hacia_objetivo(objetivo_movimiento, delta)
 		reproducir_animacion("sprint")
 		
-		if global_position.distance_to(objetivo_movimiento) < 0.3:
+		if global_position.distance_to(objetivo_movimiento) < 0.8:  # Aumentar distancia de parada
 			# Resetear paciencia para esperar la comida
 			tiempo_espera_restante = pedido_asignado.get("paciencia_maxima", 120.0) * modificador_paciencia
+			print("✅ Cliente llegó a la mesa y está esperando comida - Estado: ESPERANDO_COMIDA")
 			cambiar_estado(EstadoCliente.ESPERANDO_COMIDA)
 	else:
 		# Error: no tiene mesa asignada
@@ -285,9 +286,20 @@ func procesar_estado_esperando_comida(delta):
 	# INTEGRACIÓN: Cliente espera en la MESA a que le traigan la comida
 	reproducir_animacion("idle")
 	
+	# Mantenerse cerca de la mesa
+	if mesa_asignada:
+		var posicion_mesa = mesa_asignada.global_position + Vector3(1.5, 0.7, 0.0)
+		if global_position.distance_to(posicion_mesa) > 1.0:
+			# Volver a acercarse a la mesa si se alejó
+			global_position = global_position.lerp(posicion_mesa, 2.0 * delta)
+	
 	# Actualizar barra de paciencia
 	tiempo_espera_restante -= delta
 	actualizar_barra_paciencia()
+	
+	# Debug: mostrar que está esperando
+	if int(tiempo_en_estado) % 5 == 0 and tiempo_en_estado > 4.5:
+		print("🍽️ Cliente esperando comida en mesa - Paciencia restante: ", "%.1f" % tiempo_espera_restante)
 	
 	# La entrega se maneja en tu código existente con la función recibir_pedido_jugador()
 	
@@ -643,6 +655,34 @@ func esta_esperando() -> bool:
 
 func esta_satisfecho() -> bool:
 	return estado_actual == EstadoCliente.SALIENDO_FELIZ
+
+func esta_esperando_comida_en_mesa() -> bool:
+	"""Función específica para verificar si está esperando comida en la mesa"""
+	return estado_actual == EstadoCliente.ESPERANDO_COMIDA
+
+func obtener_estado_actual_string() -> String:
+	"""Devuelve el estado actual como string para debugging"""
+	match estado_actual:
+		EstadoCliente.ENTRANDO:
+			return "ENTRANDO"
+		EstadoCliente.EN_RECIBIDOR:
+			return "EN_RECIBIDOR"
+		EstadoCliente.ESPERANDO_ATENCION:
+			return "ESPERANDO_ATENCION"
+		EstadoCliente.YENDO_A_MESA:
+			return "YENDO_A_MESA"
+		EstadoCliente.ESPERANDO_COMIDA:
+			return "ESPERANDO_COMIDA"
+		EstadoCliente.COMIENDO:
+			return "COMIENDO"
+		EstadoCliente.PAGANDO:
+			return "PAGANDO"
+		EstadoCliente.SALIENDO_FELIZ:
+			return "SALIENDO_FELIZ"
+		EstadoCliente.SALIENDO_ENOJADO:
+			return "SALIENDO_ENOJADO"
+		_:
+			return "DESCONOCIDO"
 
 func actualizar_barra_paciencia():
 	# MANTENER: Tu función existente
