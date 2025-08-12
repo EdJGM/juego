@@ -7,3 +7,8 @@ res://Menu_pausa/menu_pausa_pausatheme.tres
 res://Menu_pausa/menu_pausa_theme_normal.tres
 res://Menu_pausa/menu_pausa_pressed.tres
 res://Menu_pausa/menu_pausa.gdshader
+res://scripts/GameManager.gd
+res://scripts/HudController.gd
+res://scripts/objeto_agarrable.gd
+res://scripts/player.gd
+res://scripts/MainMenuScene.gd

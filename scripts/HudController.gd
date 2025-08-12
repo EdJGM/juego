@@ -11,6 +11,8 @@ extends Node3D
 @onready var barra_progreso_dia = $CanvasLayer/DiaNocheContainer/BarraProgresoDia
 @onready var label_fase_dia = $CanvasLayer/DiaNocheContainer/LabelFaseDia
 @onready var label_tiempo = $CanvasLayer/DiaNocheContainer/LabelTiempo
+@onready var label_nivel = $CanvasLayer/NivelContainer/LabelNivel
+@onready var label_objetivo = $CanvasLayer/NivelContainer/LabelObjetivo
 
 # Referencias al sistema
 var game_manager: Node
@@ -337,6 +339,7 @@ func conectar_senales():
 func inicializar_ui():
 	actualizar_dinero(100)
 	actualizar_indicador_tiempo("manana")
+	actualizar_info_nivel()
 	mostrar_instrucciones_iniciales()
 
 func mostrar_instrucciones_iniciales():
@@ -360,6 +363,12 @@ func tomar_orden_cliente():
 		print("No hay jugador para tomar orden")
 		return
 	
+	# NUEVO: Verificar si ya hay una orden activa
+	if not pedido_actual.is_empty():
+		print("⚠️ Ya hay una orden activa. Completa la orden actual antes de tomar otra.")
+		mostrar_mensaje_temporal("Completa la orden actual\nantes de tomar otra", Color.ORANGE)
+		return
+	
 	var cliente_cercano = buscar_cliente_mas_cercano()
 	if cliente_cercano:
 		var pedido = obtener_pedido_cliente(cliente_cercano)
@@ -375,34 +384,50 @@ func tomar_orden_cliente():
 		print("⚠️ No hay clientes cerca para tomar orden")
 
 func buscar_cliente_mas_cercano() -> Node:
-	"""Busca el cliente más cercano al jugador"""
+	"""Busca el cliente que está en primera posición esperando atención"""
 	if not player:
 		return null
 	
 	var clientes = get_tree().get_nodes_in_group("clientes")
-	var cliente_mas_cercano = null
-	var distancia_minima = 3.0  # Distancia máxima para tomar orden
+	print("🔍 ORDEN: Buscando cliente en primera posición... Clientes encontrados: ", clientes.size())
 	
-	print("Buscando clientes cerca... Clientes encontrados: ", clientes.size())
+	# CORRECCIÓN: Buscar específicamente el cliente en posición 0 (primero en cola)
+	var cliente_primera_posicion = null
 	
 	for cliente in clientes:
 		if not cliente.has_method("esta_esperando"):
 			continue
-			
+		
+		# Solo clientes que están esperando atención (no en mesa)
 		if cliente.esta_esperando():
-			var distancia = player.global_position.distance_to(cliente.global_position)
-			print("Cliente a distancia: ", distancia)
+			# Verificar si está en posición 0 de la cola
+			var posicion_cola = 0
+			if "posicion_en_cola" in cliente:
+				posicion_cola = cliente.posicion_en_cola
 			
-			if distancia < distancia_minima:
-				distancia_minima = distancia
-				cliente_mas_cercano = cliente
+			var distancia = player.global_position.distance_to(cliente.global_position)
+			var pedido = obtener_pedido_cliente(cliente)
+			var receta_nombre = "Sin nombre"
+			if not pedido.is_empty() and pedido.has("datos_receta"):
+				receta_nombre = pedido.datos_receta.get("nombre", "Sin nombre")
+			
+			print("   Cliente con ", receta_nombre, " en posición ", posicion_cola, " a distancia: ", distancia)
+			
+			# Solo tomar orden del cliente en primera posición (posición 0) y dentro del rango
+			if posicion_cola == 0 and distancia < 3.0:
+				cliente_primera_posicion = cliente
+				print("   🎯 ORDEN: Cliente en primera posición encontrado: ", receta_nombre)
+				break
 	
-	return cliente_mas_cercano
+	return cliente_primera_posicion
 
 func obtener_pedido_cliente(cliente: Node) -> Dictionary:
 	"""Obtiene el pedido del cliente"""
 	if cliente.has_method("obtener_pedido"):
-		return cliente.obtener_pedido()
+		var pedido = cliente.obtener_pedido()
+		if not pedido.is_empty() and pedido.has("datos_receta"):
+			print("📋 ORDEN: Obteniendo pedido de cliente: ", pedido.datos_receta.get("nombre", "Sin nombre"))
+		return pedido
 	return {}
 
 # === CALLBACKS DE SEÑALES ===
@@ -421,19 +446,35 @@ func _on_cliente_agregado(cliente: Node):
 	mostrar_notificacion_cliente()
 
 func _on_pedido_completado(pedido: Dictionary, dinero_ganado: int):
-	print("HUD: Pedido completado - Ganancia: $", dinero_ganado)
+	print("✅ ENTREGA: HUD recibió pedido_completado - Limpiando inventario")
 	mostrar_feedback_pedido(true, dinero_ganado)
 	limpiar_pedido_actual()
 	
-	# CORRECCIÓN 2: Forzar actualización del inventario visual después de entregar
+	# CORRECCIÓN: Limpiar inventario aquí cuando se confirma el pedido
+	if inventario:
+		inventario.limpiar_inventario()
+		print("✅ ENTREGA: Inventario limpiado por HUD")
+	
+	# Forzar actualización del inventario visual
 	call_deferred("actualizar_inventario_visual")
 
-func _on_pedido_fallido(pedido: Dictionary, dinero_perdido: int):
+func _on_pedido_fallido(pedido: Dictionary, dinero_perdido: int, cliente_que_se_fue: Node):
 	print("HUD: Pedido fallido - Pérdida: $", dinero_perdido)
 	mostrar_feedback_pedido(false, dinero_perdido)
-	limpiar_pedido_actual()
 	
-	# CORRECCIÓN 2: También forzar actualización si el pedido falla
+	# CORRECCIÓN: Solo limpiar HUD si el cliente que se fue es exactamente el cliente_actual
+	if cliente_actual != null and cliente_que_se_fue == cliente_actual:
+		print("🧹 HUD: El cliente con pedido actual se fue - Limpiando HUD")
+		limpiar_pedido_actual()
+		cliente_actual = null  # Limpiar referencia al cliente
+	elif cliente_actual != null:
+		print("🔒 HUD: Cliente diferente se fue - Manteniendo pedido actual")
+		if pedido.has("datos_receta"):
+			print("   Se fue: ", pedido.datos_receta.get("nombre", "Sin nombre"))
+		if pedido_actual.has("datos_receta"):
+			print("   Actual: ", pedido_actual.datos_receta.get("nombre", "Sin nombre"))
+	
+	# También forzar actualización si el pedido falla
 	call_deferred("actualizar_inventario_visual")
 
 func _on_item_agregado(item):
@@ -566,6 +607,24 @@ func actualizar_indicador_tiempo(franja: String):
 		
 		label_fase_dia.modulate = Color.BLACK
 
+func actualizar_info_nivel():
+	"""Actualiza la información del nivel actual en el HUD"""
+	if not game_manager:
+		return
+	
+	var info_nivel = game_manager.obtener_info_nivel_actual() if game_manager.has_method("obtener_info_nivel_actual") else {}
+	var nivel_actual = game_manager.nivel_actual if "nivel_actual" in game_manager else 1
+	
+	if label_nivel:
+		label_nivel.text = "NIVEL " + str(nivel_actual)
+		label_nivel.modulate = Color.BLACK
+	
+	if label_objetivo:
+		var eficiencia_req = info_nivel.get("eficiencia_requerida", 40.0)
+		var dinero_objetivo = info_nivel.get("dinero_objetivo", 200)
+		label_objetivo.text = "Meta: %.0f%% eficiencia\n$%d dinero" % [eficiencia_req, dinero_objetivo]
+		label_objetivo.modulate = Color.BLACK
+
 func mostrar_notificacion_cliente():
 	"""Muestra notificación cuando llega un nuevo cliente"""
 	if nombre_pedido_label and (pedido_actual.is_empty() or cliente_actual == null):
@@ -588,27 +647,38 @@ func mostrar_pedido_dinamico(pedido: Dictionary):
 	var receta = pedido.datos_receta
 	var ingredientes_necesarios = receta.get("ingredientes", [])
 	
-	print("HUD: Mostrando pedido dinámico - ", receta.get("nombre", "Sin nombre"))
-	print("Ingredientes requeridos: ", ingredientes_necesarios)
+	print("🍽️ PEDIDO: ", receta.get("nombre", "Sin nombre"))
+	print("   Ingredientes requeridos: ", ingredientes_necesarios)
 	
 	# Actualizar nombre del pedido
 	if nombre_pedido_label:
 		nombre_pedido_label.text = "PEDIDO: " + receta.get("nombre", "Pedido Desconocido")
 		nombre_pedido_label.modulate = Color.WHITE
+		print("   Mostrando en HUD: ", nombre_pedido_label.text)
 	
 	# Limpiar ingredientes previos
 	limpiar_ingredientes_container()
 	
-	# Crear checkboxes dinámicos para cada ingrediente
+	# Crear checkboxes dinámicos con conteo de ingredientes
 	var ingredientes_container = vbox_pedidos.get_node("IngredientesContainer")
 	checkboxes_ingredientes.clear()
 	
+	# Contar cuántos de cada tipo necesitamos
+	var conteo_ingredientes = {}
 	for ingrediente in ingredientes_necesarios:
 		var tipo = detectar_tipo_ingrediente(ingrediente)
-		var checkbox = crear_checkbox_ingrediente(tipo, ingrediente)
+		if conteo_ingredientes.has(tipo):
+			conteo_ingredientes[tipo] += 1
+		else:
+			conteo_ingredientes[tipo] = 1
+	
+	# Crear checkboxes con conteo
+	for tipo in conteo_ingredientes.keys():
+		var cantidad = conteo_ingredientes[tipo]
+		var checkbox = crear_checkbox_ingrediente_con_cantidad(tipo, cantidad)
 		ingredientes_container.add_child(checkbox)
 		checkboxes_ingredientes[tipo] = checkbox
-		print("✓ Checkbox creado para: ", tipo)
+		print("✓ Checkbox creado para: ", tipo, " (cantidad: ", cantidad, ")")
 	
 	# Mostrar el panel de pedidos
 	panel_pedidos.visible = true
@@ -625,13 +695,13 @@ func limpiar_ingredientes_container():
 	for child in ingredientes_container.get_children():
 		child.queue_free()
 
-func crear_checkbox_ingrediente(tipo: String, nombre_ingrediente: String) -> CheckBox:
-	"""Crea un checkbox para un ingrediente específico"""
+func crear_checkbox_ingrediente_con_cantidad(tipo: String, cantidad: int) -> CheckBox:
+	"""Crea un checkbox para un ingrediente con cantidad específica"""
 	var checkbox = CheckBox.new()
 	checkbox.name = tipo
 	
-	# Usar nombres más descriptivos para mostrar al usuario
-	var texto_mostrar = obtener_nombre_display(tipo, nombre_ingrediente)
+	# Usar nombres más descriptivos para mostrar al usuario con cantidad
+	var texto_mostrar = obtener_nombre_display_con_cantidad(tipo, cantidad)
 	checkbox.text = texto_mostrar
 	
 	checkbox.disabled = true
@@ -642,37 +712,75 @@ func crear_checkbox_ingrediente(tipo: String, nombre_ingrediente: String) -> Che
 	checkbox.add_theme_color_override("font_disabled_color", Color.BLACK)
 	checkbox.add_theme_font_size_override("font_size", 30)
 	
+	# Guardar información de cantidad en el checkbox
+	checkbox.set_meta("cantidad_necesaria", cantidad)
+	checkbox.set_meta("cantidad_actual", 0)
+	
 	return checkbox
 
-func obtener_nombre_display(tipo: String, nombre_ingrediente: String) -> String:
-	"""Convierte el tipo interno a un nombre legible para el usuario"""
+func crear_checkbox_ingrediente(tipo: String, nombre_ingrediente: String) -> CheckBox:
+	"""Función legacy - mantenida para compatibilidad"""
+	return crear_checkbox_ingrediente_con_cantidad(tipo, 1)
+
+func obtener_nombre_display_con_cantidad(tipo: String, cantidad: int) -> String:
+	"""Convierte el tipo interno a un nombre legible con cantidad"""
+	var nombre_base = obtener_nombre_base(tipo)
+	if cantidad > 1:
+		return nombre_base + " (0/" + str(cantidad) + ")"
+	else:
+		return nombre_base
+
+func obtener_nombre_base(tipo: String) -> String:
+	"""Obtiene el nombre base del ingrediente"""
 	match tipo:
 		"pan_inferior":
-			return "Pan de Abajo"
+			return "✓ Pan de Abajo"
 		"pan_superior":
-			return "Pan de Arriba"
+			return "✓ Pan de Arriba"
 		"pan_generico":
-			return "Pan"
+			return "✓ Pan"
 		"carne":
-			return "Hamburguesa"
+			return "✓ Hamburguesa"
 		"carne_vegetal":
-			return "Hamburguesa Vegetal"
-		"tomate_cortado":
-			return "Tomate Cortado"
-		"tomate_entero":
-			return "Tomate Entero"
-		"lechuga_cortada":
-			return "Lechuga Cortada"
-		"lechuga_entera":
-			return "Lechuga Entera"
-		"queso_cortado":
-			return "Queso Cortado"
-		"queso_entero":
-			return "Queso Entero"
+			return "✓ Hamburguesa Vegetal"
+		"tomate":
+			return "✓ Tomate"
+		"lechuga":
+			return "✓ Lechuga"
+		"queso":
+			return "✓ Queso"
+		"tocino":
+			return "✓ Tocino"
+		"huevo":
+			return "✓ Huevo Frito"
+		"cebolla":
+			return "✓ Cebolla"
+		"pepinillo":
+			return "✓ Pepinillo"
+		"aguacate":
+			return "✓ Aguacate"
+		"pepino":
+			return "✓ Pepino"
+		"champiñon":
+			return "✓ Champiñones"
+		"mayonesa":
+			return "✓ Mayonesa"
+		"ketchup":
+			return "✓ Ketchup"
+		"mostaza":
+			return "✓ Mostaza"
 		"salsa":
-			return "Salsa"
+			return "✓ Salsa"
+		"papas_fritas":
+			return "✓ Papas Fritas"
+		"bebida":
+			return "✓ Bebida"
 		_:
-			return tipo.capitalize()
+			return "✓ " + tipo.capitalize()
+
+func obtener_nombre_display(tipo: String, nombre_ingrediente: String) -> String:
+	"""Función legacy - mantenida para compatibilidad"""
+	return obtener_nombre_base(tipo)
 
 func limpiar_pedido_actual():
 	"""Limpia el pedido actual y vuelve a mostrar instrucciones"""
@@ -684,12 +792,12 @@ func limpiar_pedido_actual():
 	mostrar_instrucciones_iniciales()
 
 func verificar_ingredientes_pedido():
-	"""Verifica dinámicamente los ingredientes del pedido"""
+	"""Verifica dinámicamente los ingredientes del pedido CON CANTIDADES"""
 	if pedido_actual.is_empty() or not inventario:
 		return
 	
 	var ingredientes_inventario = obtener_ingredientes_inventario()
-	print("HUD: Verificando ingredientes dinámicamente")
+	print("HUD: Verificando ingredientes con cantidades")
 	print("Inventario: ", ingredientes_inventario)
 	
 	if not pedido_actual.has("datos_receta"):
@@ -697,29 +805,52 @@ func verificar_ingredientes_pedido():
 	
 	var ingredientes_necesarios = pedido_actual.datos_receta.get("ingredientes", [])
 	
-	# Verificar cada tipo de ingrediente requerido
-	for ingrediente_necesario in ingredientes_necesarios:
-		var tipo_necesario = detectar_tipo_ingrediente(ingrediente_necesario)
-		
-		if checkboxes_ingredientes.has(tipo_necesario):
-			var checkbox = checkboxes_ingredientes[tipo_necesario]
+	# Contar ingredientes necesarios
+	var conteo_necesario = {}
+	for ingrediente in ingredientes_necesarios:
+		var tipo = detectar_tipo_ingrediente(ingrediente)
+		if conteo_necesario.has(tipo):
+			conteo_necesario[tipo] += 1
+		else:
+			conteo_necesario[tipo] = 1
+	
+	# Contar ingredientes en inventario
+	var conteo_inventario = {}
+	for ingrediente in ingredientes_inventario:
+		var tipo = detectar_tipo_ingrediente(ingrediente)
+		if conteo_inventario.has(tipo):
+			conteo_inventario[tipo] += 1
+		else:
+			conteo_inventario[tipo] = 1
+	
+	# Verificar cada tipo con cantidades
+	for tipo in conteo_necesario.keys():
+		if checkboxes_ingredientes.has(tipo):
+			var checkbox = checkboxes_ingredientes[tipo]
 			if checkbox:
-				var tiene_ingrediente = false
+				var cantidad_necesaria = conteo_necesario[tipo]
+				var cantidad_actual = conteo_inventario.get(tipo, 0)
 				
-				# Buscar si tenemos este tipo de ingrediente
-				for ingrediente_inv in ingredientes_inventario:
-					if detectar_tipo_ingrediente(ingrediente_inv) == tipo_necesario:
-						tiene_ingrediente = true
-						break
+				# Actualizar metadata del checkbox
+				checkbox.set_meta("cantidad_actual", cantidad_actual)
 				
-				checkbox.button_pressed = tiene_ingrediente
+				# Actualizar texto con progreso
+				var nombre_base = obtener_nombre_base(tipo)
+				if cantidad_necesaria > 1:
+					checkbox.text = nombre_base + " (" + str(cantidad_actual) + "/" + str(cantidad_necesaria) + ")"
+				else:
+					checkbox.text = nombre_base
 				
-				if tiene_ingrediente:
+				# Actualizar estado visual
+				var completo = cantidad_actual >= cantidad_necesaria
+				checkbox.button_pressed = completo
+				
+				if completo:
 					checkbox.modulate = Color.GREEN
-					print("✓ Ingrediente disponible: ", tipo_necesario)
+					print("✓ Ingrediente completo: ", tipo, " (", cantidad_actual, "/", cantidad_necesaria, ")")
 				else:
 					checkbox.modulate = Color.WHITE
-					print("✗ Ingrediente faltante: ", tipo_necesario)
+					print("✗ Ingrediente incompleto: ", tipo, " (", cantidad_actual, "/", cantidad_necesaria, ")")
 
 func actualizar_inventario_visual():
 	"""Actualiza visualmente el inventario en el HUD"""
@@ -778,7 +909,7 @@ func obtener_ingredientes_inventario() -> Array:
 	return nombres
 
 func detectar_tipo_ingrediente(ingrediente_nombre: String) -> String:
-	"""Función sincronizada con GameManager"""
+	"""Función sincronizada con GameManager - Compatible con JSON externo"""
 	if ingrediente_nombre == "":
 		return "generico"
 	
@@ -792,25 +923,57 @@ func detectar_tipo_ingrediente(ingrediente_nombre: String) -> String:
 	elif "bun" in nombre and not ("bottom" in nombre or "top" in nombre):
 		return "pan_generico"
 	elif "vegetableburger" in nombre:
-		return "carne"  # CAMBIO: Mismo que GameManager
+		return "carne_vegetal"  # Distinguir hamburguesa vegetal
 	elif "burger" in nombre or "meat" in nombre or "carne" in nombre:
 		return "carne"
-	elif "tomato_slice" in nombre:
-		return "tomate"  # CAMBIO: Simplificado
+	# Detectar vegetales
 	elif "tomato" in nombre:
-		return "tomate"
-	elif "lettuce_slice" in nombre:
-		return "lechuga"  # CAMBIO: Simplificado
+		return "tomate"  # Tanto "tomato" como "tomato_slice"
 	elif "lettuce" in nombre:
-		return "lechuga"
-	elif "cheese_slice" in nombre:
-		return "queso"  # CAMBIO: Simplificado
+		return "lechuga"  # Tanto "lettuce" como "lettuce_slice"
+	elif "onion_chopped" in nombre:
+		return "cebolla_picada"
+	elif "onion" in nombre:
+		return "cebolla"
+	elif "pickle" in nombre:
+		return "pepinillo"
+	elif "avocado" in nombre:
+		return "aguacate"
+	elif "cucumber" in nombre:
+		return "pepino"
+	elif "carrot" in nombre:
+		return "zanahoria"
+	# Otros ingredientes
 	elif "cheese" in nombre:
-		return "queso"
-	elif "sauce" in nombre or "salsa" in nombre or "ketchup" in nombre or "mustard" in nombre:
+		return "queso"  # Tanto "cheese" como "cheese_slice"
+	elif "bacon" in nombre:
+		return "tocino"
+	elif "egg" in nombre:
+		return "huevo"
+	elif "mushroom" in nombre:
+		return "champiñon"
+	elif "ham_cooked" in nombre:
+		return "pollo"
+	elif "steak_pieces" in nombre:
+		return "carne_frita"
+	# Salsas y condimentos
+	elif "sauce" in nombre or "salsa" in nombre:
 		return "salsa"
+	elif "ketchup" in nombre:
+		return "ketchup"
+	elif "mustard" in nombre:
+		return "mostaza"
+	elif "mayo" in nombre or "mayonnaise" in nombre:
+		return "mayonesa"
+	# Extras
+	elif "french_fries" in nombre or "fries" in nombre or "papas" in nombre:
+		return "papas_fritas"
+	elif "drink" in nombre or "soda" in nombre or "bebida" in nombre:
+		return "bebida"
 	else:
-		return "generico"
+		# En lugar de "generico", retornar el nombre original para debugging
+		print("⚠️ HUD - INGREDIENTE NO RECONOCIDO: ", ingrediente_nombre)
+		return ingrediente_nombre
 
 func mostrar_feedback_pedido(exitoso: bool, cantidad: int):
 	var feedback = Label.new()
@@ -835,3 +998,30 @@ func mostrar_feedback_pedido(exitoso: bool, cantidad: int):
 	tween.parallel().tween_property(feedback, "scale", Vector2(1.0, 1.0), 0.5)
 	tween.parallel().tween_property(feedback, "modulate:a", 0.0, 2.0)
 	tween.tween_callback(feedback.queue_free)
+
+func mostrar_mensaje_temporal(texto: String, color: Color = Color.WHITE, duracion: float = 3.0):
+	"""Muestra un mensaje temporal en pantalla"""
+	var mensaje = Label.new()
+	mensaje.text = texto
+	mensaje.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	mensaje.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	mensaje.add_theme_font_size_override("font_size", 32)
+	mensaje.modulate = color
+	mensaje.add_theme_color_override("font_shadow_color", Color.BLACK)
+	mensaje.add_theme_constant_override("shadow_offset_x", 2)
+	mensaje.add_theme_constant_override("shadow_offset_y", 2)
+	
+	# Posicionar en el centro superior de la pantalla
+	var viewport_size = get_viewport().size
+	mensaje.position = Vector2(viewport_size.x / 2 - 200, viewport_size.y / 4)
+	mensaje.size = Vector2(400, 100)
+	
+	get_tree().current_scene.add_child(mensaje)
+	
+	# Animación de aparición y desaparición
+	mensaje.modulate.a = 0.0
+	var tween = create_tween()
+	tween.tween_property(mensaje, "modulate:a", 1.0, 0.3)
+	tween.tween_interval(duracion - 0.6)  # Usar tween_interval en lugar de tween_delay
+	tween.tween_property(mensaje, "modulate:a", 0.0, 0.3)
+	tween.tween_callback(mensaje.queue_free)

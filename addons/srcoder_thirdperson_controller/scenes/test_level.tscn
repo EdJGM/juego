@@ -1,4 +1,4 @@
-[gd_scene load_steps=90 format=3 uid="uid://bxy1qa0s46nff"]
+[gd_scene load_steps=94 format=3 uid="uid://bxy1qa0s46nff"]
 
 [ext_resource type="Material" uid="uid://5ywq8eeal8et" path="res://addons/srcoder_thirdperson_controller/assets/Textures/grid_orange_1.material" id="1_duh8c"]
 [ext_resource type="Script" uid="uid://d2kof42uge6il" path="res://scripts/piso_baldosa.gd" id="2_q37x8"]
@@ -79,6 +79,10 @@
 [ext_resource type="PackedScene" uid="uid://capl6uybnvsjq" path="res://addons/srcoder_thirdperson_controller/scenes/ingredients/food_ingredient_tomato_2.tscn" id="78_m1xd1"]
 [ext_resource type="PackedScene" uid="uid://dpe3g6q5hjj4p" path="res://addons/srcoder_thirdperson_controller/scenes/ingredients/food_ingredient_burger_cooked_2.tscn" id="79_jyj1w"]
 [ext_resource type="PackedScene" uid="uid://vffh20v8c4md" path="res://KayKit-Restaurant-Bits-1.0-153c8a7535b48237854cb54ff6890679f8c574d1/addons/kaykit_restaurant_bits/Assets/gltf/pan_B.gltf" id="79_tdblr"]
+[ext_resource type="ArrayMesh" uid="uid://cbuu611j6kpwn" path="res://KayKit-Restaurant-Bits-1.0-153c8a7535b48237854cb54ff6890679f8c574d1/addons/kaykit_restaurant_bits/Assets/obj/pan_A.obj" id="80_jyj1w"]
+[ext_resource type="ArrayMesh" uid="uid://dectcdi4ml7bw" path="res://KayKit-Restaurant-Bits-1.0-153c8a7535b48237854cb54ff6890679f8c574d1/addons/kaykit_restaurant_bits/Assets/obj/food_ingredient_ham_cooked.obj" id="81_wg7od"]
+[ext_resource type="ArrayMesh" uid="uid://ck0ancvvrlebw" path="res://KayKit-Restaurant-Bits-1.0-153c8a7535b48237854cb54ff6890679f8c574d1/addons/kaykit_restaurant_bits/Assets/obj/food_ingredient_steak_pieces.obj" id="82_tdblr"]
+[ext_resource type="ArrayMesh" uid="uid://bcomid63dklrn" path="res://KayKit-Restaurant-Bits-1.0-153c8a7535b48237854cb54ff6890679f8c574d1/addons/kaykit_restaurant_bits/Assets/obj/food_ingredient_onion_chopped.obj" id="83_jouw6"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_g8xqu"]
 sky_top_color = Color(0.7, 0.9, 1, 1)
@@ -629,13 +633,35 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0.843167, -2.89341)
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.38677, 0.846482, -2.86867)
 
 [node name="food_ingredient_lettuce2" parent="." instance=ExtResource("76_ft7ur")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.26746, 0.771943, -2.91221)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.55213, 0.8017, -2.92506)
 
 [node name="food_ingredient_vegetableburger_cooked2" parent="." instance=ExtResource("77_1gu4f")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.71299, 1.01824, 3.50083)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.856, 1.03018, 3.43328)
+
+[node name="food_ingredient_vegetableburger_cooked2" parent="food_ingredient_vegetableburger_cooked2" instance=ExtResource("77_1gu4f")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.87092, 1.02788, 3.43069)
+
+[node name="food_ingredient_vegetableburger_cooked3" parent="food_ingredient_vegetableburger_cooked2" instance=ExtResource("77_1gu4f")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.87092, 1.02788, 3.43069)
 
 [node name="food_ingredient_tomato2" parent="." instance=ExtResource("78_m1xd1")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.28778, 0.857929, -2.86613)
 
 [node name="food_ingredient_burger_cooked2" parent="." instance=ExtResource("79_jyj1w")]
 transform = Transform3D(1, 0, 0, 0, 0.994243, -0.107149, 0, 0.107149, 0.994243, 9.11338, 1.13942, 1.52399)
+
+[node name="PanA" type="MeshInstance3D" parent="."]
+transform = Transform3D(-0.05038, 0, -0.393713, 0, 0.396923, 0, 0.393713, 0, -0.05038, 9.10952, 1.1018, 2.03973)
+mesh = ExtResource("80_jyj1w")
+
+[node name="FoodIngredientHamCooked" type="MeshInstance3D" parent="."]
+transform = Transform3D(-0.109239, 0.00386498, 0.103605, -0.0112515, 0.14917, -0.0174281, -0.103064, -0.0203813, -0.107909, 8.97383, 1.27025, 2.01029)
+mesh = ExtResource("81_wg7od")
+
+[node name="FoodIngredientSteakPieces" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.330595, 0, 0, 0, 0.330595, 0, 0, 0, 0.330595, 9.19442, 1.09175, 3.05914)
+mesh = ExtResource("82_tdblr")
+
+[node name="FoodIngredientOnionChopped" type="MeshInstance3D" parent="."]
+transform = Transform3D(-0.00297429, -0.000145727, -0.387696, -0.0189763, 0.387305, 0, 0.387294, 0.0189757, -0.00297737, 5.32157, 1.02181, -3.02825)
+mesh = ExtResource("83_jouw6")

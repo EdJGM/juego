@@ -12,6 +12,7 @@ signal pedido_creado(pedido)
 # Variables
 @export var capacidad_maxima: int = 6
 var items: Array[ObjetoAgarrable] = []
+var entregando_pedido: bool = false
 
 # Referencias
 var jugador: CharacterBody3D
@@ -156,21 +157,29 @@ func contar_ingrediente_tipo(tipo: String) -> int:
 	return count
 
 func limpiar_inventario():
-	"""CORRECCIÓN 2: Limpiar inventario ELIMINANDO los items en lugar de soltarlos"""
-	print("Limpiando inventario...")
+	"""Limpiar inventario ELIMINANDO los items cuando se confirma entrega"""
+	print("✅ ENTREGA: Limpiando inventario...")
+	
+	# Marcar que estamos entregando pedido
+	entregando_pedido = true
 	
 	for item in items:
 		if is_instance_valid(item):
 			item_removido.emit(item)
 			
-			# OPCIÓN A: ELIMINAR COMPLETAMENTE (RECOMENDADO)
-			if item.has_method("soltar_objeto"):
-				item.soltar_objeto()  # Esto ahora los elimina gracias a la corrección 3
-			else:
-				item.queue_free()
+			# ELIMINAR CLONES: Los objetos en inventario son clones, se eliminan
+			item.queue_free()
 	
 	items.clear()
-	print("✓ Inventario limpiado - Todos los items eliminados")
+	
+	# Resetear estado usando call_deferred para evitar async
+	call_deferred("resetear_estado_entrega")
+	
+	print("✅ ENTREGA: Inventario limpiado")
+
+func resetear_estado_entrega():
+	"""Resetea el estado de entrega"""
+	entregando_pedido = false
 
 func verificar_pedido_completo():
 	"""Verifica si los ingredientes actuales forman un pedido completo"""
@@ -214,13 +223,13 @@ func verificar_ingredientes_para_pedido(pedido: Dictionary) -> bool:
 	return true
 
 func detectar_tipo_ingrediente(nombre_ingrediente: String) -> String:
-	"""Función sincronizada con GameManager y HudController"""
+	"""Función sincronizada con GameManager y HudController - Compatible con JSON externo"""
 	if nombre_ingrediente == "":
 		return "generico"
 	
 	var nombre = nombre_ingrediente.to_lower()
 	
-	# IMPORTANTE: EXACTAMENTE la misma lógica
+	# IMPORTANTE: EXACTAMENTE la misma lógica que GameManager
 	if "bun_bottom" in nombre:
 		return "pan_inferior"
 	elif "bun_top" in nombre:
@@ -228,25 +237,57 @@ func detectar_tipo_ingrediente(nombre_ingrediente: String) -> String:
 	elif "bun" in nombre and not ("bottom" in nombre or "top" in nombre):
 		return "pan_generico"
 	elif "vegetableburger" in nombre:
-		return "carne"  # CAMBIO: Tratarla como carne
+		return "carne_vegetal"  # Distinguir hamburguesa vegetal
 	elif "burger" in nombre or "meat" in nombre or "carne" in nombre:
 		return "carne"
-	elif "tomato_slice" in nombre:
-		return "tomate"  # CAMBIO: Simplificado
+	# Detectar vegetales
 	elif "tomato" in nombre:
-		return "tomate"
-	elif "lettuce_slice" in nombre:
-		return "lechuga"  # CAMBIO: Simplificado
+		return "tomate"  # Tanto "tomato" como "tomato_slice"
 	elif "lettuce" in nombre:
-		return "lechuga"
-	elif "cheese_slice" in nombre:
-		return "queso"  # CAMBIO: Simplificado
+		return "lechuga"  # Tanto "lettuce" como "lettuce_slice"
+	elif "onion_chopped" in nombre:
+		return "cebolla_picada"
+	elif "onion" in nombre:
+		return "cebolla"
+	elif "pickle" in nombre:
+		return "pepinillo"
+	elif "avocado" in nombre:
+		return "aguacate"
+	elif "cucumber" in nombre:
+		return "pepino"
+	elif "carrot" in nombre:
+		return "zanahoria"
+	# Otros ingredientes
 	elif "cheese" in nombre:
-		return "queso"
-	elif "sauce" in nombre or "salsa" in nombre or "ketchup" in nombre or "mustard" in nombre:
+		return "queso"  # Tanto "cheese" como "cheese_slice"
+	elif "bacon" in nombre:
+		return "tocino"
+	elif "egg" in nombre:
+		return "huevo"
+	elif "mushroom" in nombre:
+		return "champiñon"
+	elif "ham_cooked" in nombre:
+		return "pollo"
+	elif "steak_pieces" in nombre:
+		return "carne_frita"
+	# Salsas y condimentos
+	elif "sauce" in nombre or "salsa" in nombre:
 		return "salsa"
+	elif "ketchup" in nombre:
+		return "ketchup"
+	elif "mustard" in nombre:
+		return "mostaza"
+	elif "mayo" in nombre or "mayonnaise" in nombre:
+		return "mayonesa"
+	# Extras
+	elif "french_fries" in nombre or "fries" in nombre or "papas" in nombre:
+		return "papas_fritas"
+	elif "drink" in nombre or "soda" in nombre or "bebida" in nombre:
+		return "bebida"
 	else:
-		return "generico"
+		# En lugar de "generico", retornar el nombre original para debugging
+		print("⚠️ INVENTARIO - INGREDIENTE NO RECONOCIDO: ", nombre_ingrediente)
+		return nombre_ingrediente
 
 func crear_pedido_desde_inventario() -> Dictionary:
 	"""Crea un pedido con los ingredientes actuales del inventario"""
@@ -259,24 +300,36 @@ func crear_pedido_desde_inventario() -> Dictionary:
 	}
 
 func entregar_pedido_a_cliente(cliente: Node) -> bool:
-	"""CORRECCIÓN 2: Entrega el pedido y LIMPIA EL INVENTARIO correctamente"""
+	"""Entrega el pedido y limpia el inventario"""
+	print("🍽️ ENTREGA: Intentando entregar a ", cliente.name if cliente else "null")
+	print("   Estado cliente: ", cliente.obtener_estado_actual_string() if cliente.has_method("obtener_estado_actual_string") else "desconocido")
+	print("   Items inventario: ", items.size())
+	
 	if items.is_empty():
-		print("No hay ingredientes para entregar")
+		print("❌ ENTREGA: Sin ingredientes")
 		return false
 	
 	if not cliente or not cliente.has_method("recibir_pedido_jugador"):
-		print("Cliente inválido o sin método recibir_pedido_jugador")
+		print("❌ ENTREGA: Cliente inválido")
 		return false
 	
 	var pedido_jugador = crear_pedido_desde_inventario()
 	
-	if cliente.recibir_pedido_jugador(pedido_jugador):
-		print("✓ Pedido entregado exitosamente al cliente")
-		limpiar_inventario()  # Esto ahora elimina correctamente los items
+	# CORRECCIÓN: NO limpiar automáticamente
+	# El inventario se limpiará solo cuando el GameManager confirme que el pedido fue aceptado
+	var entrega_exitosa = cliente.recibir_pedido_jugador(pedido_jugador)
+	
+	if entrega_exitosa:
+		print("✅ ENTREGA: Pedido enviado al cliente - Esperando validación GameManager")
 		return true
 	else:
-		print("✗ El cliente rechazó el pedido")
+		print("❌ ENTREGA: Cliente rechazó pedido")
 		return false
+
+func limpiar_inventario_diferido():
+	"""Función para limpiar inventario de forma diferida"""
+	limpiar_inventario()
+	print("✅ ENTREGA: Inventario limpiado")
 
 func _input(event):
 	if not jugador:
@@ -291,54 +344,34 @@ func _input(event):
 		entregar_a_cliente_cercano()
 	elif event.is_action_pressed("limpiar_inventario"):  # Tecla C
 		limpiar_inventario()
+	elif event is InputEventKey and event.pressed and event.keycode == KEY_Q:  # Tecla Q
+		eliminar_ultimo_ingrediente()
 
 func entregar_a_cliente_cercano():
 	"""Busca el cliente más cercano y le entrega el pedido"""
 	if not jugador:
-		print("No hay jugador para entregar pedido")
 		return
 	
 	var clientes = get_tree().get_nodes_in_group("clientes")
 	var cliente_mas_cercano = null
-	var distancia_minima = 5.0  # Aumentar distancia máxima para entregar
+	var distancia_minima = 5.0
 	
-	print("\n🔍 Buscando clientes cerca... Clientes encontrados: ", clientes.size())
-	print("Posición del jugador: ", jugador.global_position)
-	
-	for i in range(clientes.size()):
-		var cliente = clientes[i]
+	for cliente in clientes:
 		if not is_instance_valid(cliente):
 			continue
 			
 		var distancia = jugador.global_position.distance_to(cliente.global_position)
-		var estado = obtener_estado_cliente(cliente)
 		var puede_recibir = esta_esperando_comida(cliente)
-		
-		print("Cliente ", i, ":")
-		print("  - Posición: ", cliente.global_position)
-		print("  - Distancia: ", "%.2f" % distancia)
-		print("  - Estado: ", estado)
-		print("  - Puede recibir: ", puede_recibir)
 		
 		if cliente.has_method("recibir_pedido_jugador") and puede_recibir:
 			if distancia < distancia_minima:
 				distancia_minima = distancia
 				cliente_mas_cercano = cliente
-				print("  ✅ Cliente candidato para entrega")
-			else:
-				print("  ❌ Muy lejos (", "%.2f" % distancia, " > ", distancia_minima, ")")
-		else:
-			print("  ❌ No puede recibir pedido")
 				
 	if cliente_mas_cercano:
-		print("\n🍽️ Intentando entregar pedido a cliente más cercano (distancia: ", "%.2f" % distancia_minima, ")")
-		if entregar_pedido_a_cliente(cliente_mas_cercano):
-			print("✅ Pedido entregado exitosamente")
-		else:
-			print("❌ Fallo al entregar pedido")
+		entregar_pedido_a_cliente(cliente_mas_cercano)
 	else:
-		print("\n❌ No hay clientes cerca esperando pedidos")
-		print("Aumenta la distancia o verifica que haya clientes en estado ESPERANDO_COMIDA")
+		print("❌ ENTREGA: No hay clientes cerca esperando")
 
 func obtener_estado_cliente(cliente: Node) -> String:
 	"""Obtiene el estado actual del cliente para debugging"""
@@ -356,23 +389,18 @@ func esta_esperando_comida(cliente: Node) -> bool:
 	if not cliente.has_method("recibir_pedido_jugador"):
 		return false
 	
-	# CORRECCIÓN: Usar la nueva función específica del cliente
+	# Usar la nueva función específica del cliente
 	if cliente.has_method("esta_esperando_comida_en_mesa"):
-		var esperando = cliente.esta_esperando_comida_en_mesa()
-		if esperando:
-			print("✅ Cliente está esperando comida en mesa")
-		return esperando
+		return cliente.esta_esperando_comida_en_mesa()
 	
-	# CORRECCIÓN: Verificar el estado usando la función de string
+	# Verificar el estado usando la función de string
 	if cliente.has_method("obtener_estado_actual_string"):
 		var estado_string = cliente.obtener_estado_actual_string()
-		print("DEBUG - Estado del cliente: ", estado_string)
 		return estado_string == "ESPERANDO_COMIDA"
 	
-	# Fallback original mejorado
+	# Fallback original
 	if "estado_actual" in cliente:
 		var estado = cliente.estado_actual
-		print("DEBUG - Estado del cliente (enum): ", estado, " (4=ESPERANDO_COMIDA)")
 		return estado == 4  # EstadoCliente.ESPERANDO_COMIDA
 	
 	# Último fallback para clientes sin FSM
@@ -452,3 +480,34 @@ func esta_vacio() -> bool:
 
 func esta_lleno() -> bool:
 	return items.size() >= capacidad_maxima
+
+func esta_entregando_pedido() -> bool:
+	"""Indica si el inventario está siendo limpiado para entregar un pedido"""
+	return entregando_pedido
+
+func eliminar_ultimo_ingrediente():
+	"""Elimina el último ingrediente agregado al inventario (LIFO - Last In, First Out)"""
+	if items.is_empty():
+		print("🗑️ INVENTARIO: No hay ingredientes para eliminar")
+		return
+	
+	# Obtener el último ingrediente (último agregado)
+	var ultimo_item = items[items.size() - 1]
+	var nombre_ingrediente = "ingrediente desconocido"
+	
+	if ultimo_item and ultimo_item.has_method("obtener_nombre_ingrediente_seguro"):
+		nombre_ingrediente = obtener_nombre_ingrediente_seguro(ultimo_item)
+	elif ultimo_item:
+		nombre_ingrediente = obtener_nombre_ingrediente_seguro(ultimo_item)
+	
+	print("🗑️ INVENTARIO: Devolviendo último ingrediente: ", nombre_ingrediente)
+	
+	# Eliminar del inventario
+	items.remove_at(items.size() - 1)
+	item_removido.emit(ultimo_item)
+	
+	# ELIMINAR CLON: El objeto en inventario es un clon, simplemente eliminarlo
+	if is_instance_valid(ultimo_item):
+		ultimo_item.queue_free()
+	
+	print("✅ INVENTARIO: Ingrediente devuelto (", items.size(), "/", capacidad_maxima, " restantes)")

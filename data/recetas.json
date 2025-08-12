@@ -66,6 +66,64 @@
             "dificultad": "facil",
             "descripcion": "Hamburguesa clásica con queso",
             "imagen": "cheeseburger.png"
+        },
+        "ensalada_simple": {
+            "nombre": "Ensalada Simple",
+            "precio": 40,
+            "tiempo_preparacion": 20,
+            "ingredientes": [
+                "food_ingredient_tomato",
+                "food_ingredient_tomato",
+                "food_ingredient_lettuce"
+            ],
+            "ingredientes_opcionales": [],
+            "dificultad": "facil",
+            "descripcion": "Ensalada fresca con doble tomate y lechuga",
+            "imagen": "ensalada_simple.png"
+        },
+        "ensalada_de_carne": {
+            "nombre": "Ensalada de Carne",
+            "precio": 75,
+            "tiempo_preparacion": 35,
+            "ingredientes": [
+                "food_ingredient_tomato",
+                "food_ingredient_tomato",
+                "food_ingredient_burger_cooked",
+                "food_ingredient_lettuce"
+            ],
+            "ingredientes_opcionales": [],
+            "dificultad": "medio",
+            "descripcion": "Ensalada nutritiva con carne y doble tomate",
+            "imagen": "ensalada_de_carne.png"
+        },
+        "hamburguesa_de_queso": {
+            "nombre": "Hamburguesa de Queso",
+            "precio": 45,
+            "tiempo_preparacion": 25,
+            "ingredientes": [
+                "food_ingredient_bun_bottom",
+                "food_ingredient_cheese",
+                "food_ingredient_bun_top"
+            ],
+            "ingredientes_opcionales": [],
+            "dificultad": "facil",
+            "descripcion": "Hamburguesa simple solo con queso",
+            "imagen": "hamburguesa_de_queso.png"
+        },
+        "hamburguesa_doble": {
+            "nombre": "Hamburguesa Doble",
+            "precio": 85,
+            "tiempo_preparacion": 50,
+            "ingredientes": [
+                "food_ingredient_bun_bottom",
+                "food_ingredient_burger_cooked",
+                "food_ingredient_burger_cooked",
+                "food_ingredient_bun_top"
+            ],
+            "ingredientes_opcionales": [],
+            "dificultad": "medio",
+            "descripcion": "Hamburguesa con doble carne",
+            "imagen": "hamburguesa_doble.png"
         }
     },
     "tipos_ingredientes": {
@@ -144,6 +202,57 @@
             "categoria": "queso_cortado",
             "tiempo_corte": 0,
             "requiere_coccion": false
+        },
+        "food_ingredient_bacon": {
+            "nombre_display": "Tocino",
+            "categoria": "tocino",
+            "tiempo_corte": 0,
+            "requiere_coccion": true,
+            "tiempo_coccion": 10
+        },
+        "food_ingredient_egg_fried": {
+            "nombre_display": "Huevo Frito",
+            "categoria": "huevo",
+            "tiempo_corte": 0,
+            "requiere_coccion": true,
+            "tiempo_coccion": 8
+        },
+        "food_ingredient_onion": {
+            "nombre_display": "Cebolla",
+            "categoria": "cebolla",
+            "tiempo_corte": 4,
+            "requiere_coccion": false
+        },
+        "food_ingredient_pickle": {
+            "nombre_display": "Pepinillo",
+            "categoria": "pepinillo",
+            "tiempo_corte": 0,
+            "requiere_coccion": false
+        },
+        "food_ingredient_avocado": {
+            "nombre_display": "Aguacate",
+            "categoria": "aguacate",
+            "tiempo_corte": 3,
+            "requiere_coccion": false
+        },
+        "food_ingredient_cucumber": {
+            "nombre_display": "Pepino",
+            "categoria": "pepino",
+            "tiempo_corte": 2,
+            "requiere_coccion": false
+        },
+        "food_ingredient_mushroom": {
+            "nombre_display": "Champiñones",
+            "categoria": "champiñon",
+            "tiempo_corte": 0,
+            "requiere_coccion": true,
+            "tiempo_coccion": 12
+        },
+        "food_ingredient_mayonnaise": {
+            "nombre_display": "Mayonesa",
+            "categoria": "mayonesa",
+            "tiempo_corte": 0,
+            "requiere_coccion": false
         }
     },
     "configuracion_juego": {
@@ -186,7 +295,8 @@
             "recetas_disponibles": [
                 "hamburguesa_basica",
                 "cheeseburger",
-                "hamburguesa_vegetariana"
+                "hamburguesa_vegetariana",
+                "ensalada_simple"
             ],
             "duracion_minutos": 6,
             "objetivo_dinero": 350,
@@ -198,7 +308,11 @@
                 "hamburguesa_basica",
                 "hamburguesa_completa",
                 "hamburguesa_vegetariana",
-                "cheeseburger"
+                "cheeseburger",
+                "ensalada_simple",
+                "hamburguesa_de_queso",
+                "ensalada_de_carne",
+                "hamburguesa_doble"
             ],
             "duracion_minutos": 8,
             "objetivo_dinero": 500,

@@ -20,6 +20,11 @@ var player_animation_state : animation_state = animation_state.IDLE
 var objeto_cercano : ObjetoAgarrable = null
 var objetos_detectados: Array = []
 
+# Control estricto de una acción por vez
+var procesando_interaccion: bool = false
+var ultimo_tiempo_interaccion: float = 0.0
+var cooldown_interaccion: float = 1.0  # 1 segundo entre interacciones
+
 func _ready():
 	print("Player inicializando...")
 	
@@ -82,9 +87,22 @@ func _input(event):
 	if not event is InputEventKey or not event.pressed:
 		return
 	
-	# Manejar interacciones usando Input global
+	# Manejar interacciones usando Input global con control estricto
 	if Input.is_action_just_pressed("interactuar"):  # Tecla F
-		print("Player: Tecla F presionada")
+		var tiempo_actual = Time.get_ticks_msec() / 1000.0
+		
+		# Verificar si ya estamos procesando o en cooldown
+		if procesando_interaccion:
+			print("🚫 PLAYER: Ya procesando interacción, ignorando...")
+			return
+			
+		if tiempo_actual - ultimo_tiempo_interaccion < cooldown_interaccion:
+			print("🚫 PLAYER: En cooldown, ignorando...")
+			return
+		
+		print("🎯 PLAYER: Tecla F presionada - INICIANDO interacción")
+		ultimo_tiempo_interaccion = tiempo_actual
+		procesando_interaccion = true
 		interactuar_con_objeto_cercano()
 	elif Input.is_action_just_pressed("entregar_pedido"):  # Tecla E
 		entregar_pedido()
@@ -93,46 +111,62 @@ func _input(event):
 			inventario.limpiar_inventario()
 
 func interactuar_con_objeto_cercano():
-	# Buscar objetos cercanos usando múltiples métodos
+	print("🔄 PLAYER: === INICIANDO INTERACCIÓN ===")
+	
+	# Buscar objetos cercanos
 	var objetos_cercanos = buscar_objetos_agarrables_cercanos()
+	print("🎯 PLAYER: Objetos encontrados: ", objetos_cercanos.size())
 	
-	print("Player: Buscando objetos cercanos...")
-	print("Objetos encontrados: ", objetos_cercanos.size())
-	
+	# GARANTIZAR QUE SOLO PROCESAMOS 1 OBJETO
 	if objetos_cercanos.size() > 0:
-		var objeto = objetos_cercanos[0]  # Tomar el más cercano
-		print("Objeto más cercano: ", objeto.name, " - ", objeto.nombre_ingrediente)
+		var objeto = objetos_cercanos[0]  # SOLO el primero
+		print("🎯 PLAYER: Procesando objeto: ", objeto.nombre_ingrediente)
 		
-		if objeto.puede_agarrarse and not objeto.siendo_agarrado:
+		if objeto.puede_agarrarse:
 			if inventario.puede_agregar_item():
-				print("Intentando agarrar objeto...")
-				objeto.agarrar_objeto()
+				print("🎯 PLAYER: Creando UN SOLO clon...")
+				# Crear clon directamente aquí para control total
+				var clon = objeto.crear_clon_para_inventario()
+				if clon:
+					if inventario.agregar_item(clon):
+						print("✅ PLAYER: EXACTAMENTE 1 objeto agregado")
+					else:
+						clon.queue_free()
+						print("❌ PLAYER: Error al agregar al inventario")
+				else:
+					print("❌ PLAYER: Error al crear clon")
 			else:
-				print("Inventario lleno")
+				print("❌ PLAYER: Inventario lleno")
 		else:
-			print("Objeto no se puede agarrar - puede_agarrarse: ", objeto.puede_agarrarse, ", siendo_agarrado: ", objeto.siendo_agarrado)
+			print("❌ PLAYER: Objeto no se puede agarrar")
 	else:
-		print("No hay objetos cerca para agarrar")
+		print("❌ PLAYER: No hay objetos cerca")
+	
+	# RESETEAR FLAG AL FINAL
+	procesando_interaccion = false
+	print("🔄 PLAYER: === INTERACCIÓN COMPLETADA ===")
 
 func buscar_objetos_agarrables_cercanos() -> Array:
 	var objetos_cercanos = []
-	var radio_busqueda = 3.0
+	var radio_busqueda = 2.5  # Radio más pequeño para más precisión
 	
 	# Buscar todos los ObjetoAgarrable en el nivel
 	var objetos = get_tree().get_nodes_in_group("objetos_agarrables")
 	
-	print("Total objetos agarrables en escena: ", objetos.size())
-	
 	for objeto in objetos:
 		if objeto and is_instance_valid(objeto):
 			var distancia = global_position.distance_to(objeto.global_position)
-			print("Objeto: ", objeto.name, " - Distancia: ", distancia, " - Visible: ", objeto.visible)
 			
-			if distancia <= radio_busqueda and objeto.visible and not objeto.siendo_agarrado:
+			# Solo objetos cercanos, visibles y no siendo agarrados
+			if distancia <= radio_busqueda and objeto.visible and objeto.puede_agarrarse:
 				objetos_cercanos.append(objeto)
 	
-	# Ordenar por distancia
+	# Ordenar por distancia - el más cercano primero
 	objetos_cercanos.sort_custom(func(a, b): return global_position.distance_to(a.global_position) < global_position.distance_to(b.global_position))
+	
+	# LIMITAR A SOLO 1 OBJETO - el más cercano
+	if objetos_cercanos.size() > 1:
+		objetos_cercanos = [objetos_cercanos[0]]
 	
 	return objetos_cercanos
 
