@@ -1,24 +1,109 @@
+# ===== GODOT GITIGNORE =====
+
 # Godot 4+ specific ignores
 .godot/
 
-# Godot-specific ignores
+# Godot project files to ignore
 .import/
 export.cfg
 export_presets.cfg
+override.cfg
 
-# Imported translations (automatically generated from CSV files)
+# Imported files (automatically generated)
 *.translation
+*.import
 
-# Mono-specific ignores
+# Builds and exports
+builds/
+dist/
+*.exe
+*.dmg
+*.apk
+*.ipa
+*.zip
+
+# ===== MONO/C# SPECIFIC =====
 .mono/
 data_*/
 mono_crash.*.json
+*.csproj
+*.sln
+bin/
+obj/
 
-# OS-specific ignores
-.DS_Store
+# ===== OS SPECIFIC =====
+# Windows
 Thumbs.db
+ehthumbs.db
+Desktop.ini
+*.lnk
 
-# Additional Godot ignores
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon?
+._*
+
+# Linux
+*~
+.nfs*
+
+# ===== IDE/EDITOR SPECIFIC =====
+# Visual Studio Code
+.vscode/
+
+# JetBrains IDEs
+.idea/
+*.iml
+
+# Vim
+*.swp
+*.swo
+*~
+
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+auto-save-list
+tramp
+.\#*
+
+# ===== DEVELOPMENT FILES =====
+# Temporary files
 *.tmp
-*.import
-*.cfg
+*.temp
+*.log
+*.bak
+*.backup
+
+# Version control
+*.orig
+*.rej
+
+# Debugging
+debug/
+*.debug
+
+# Documentation builds
+docs/_build/
+
+# ===== PROJECT SPECIFIC =====
+# User settings and save files
+user://
+save_games/
+settings.cfg
+
+# Asset store packages (if using any)
+AssetStoreTools/
+
+# Screenshots and recordings
+screenshots/
+recordings/
+
+# Local test files
+test_*
+*_test.*
